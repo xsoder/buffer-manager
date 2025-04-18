@@ -28,7 +28,7 @@ use {
 ### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
-{
+return {
   'xsoder/buffer-manager',
   config = function()
     require('buffer-manager').setup()
@@ -39,7 +39,7 @@ use {
 ### Using [vim-plug](https://github.com/junegunn/vim-plug)
 
 ```vim
-Plug 'username/buffer-manager'
+Plug 'xsoder/buffer-manager'
 ```
 
 Then in your Lua config:
