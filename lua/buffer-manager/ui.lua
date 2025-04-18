@@ -255,6 +255,11 @@ local function create_window()
                 end)
                 return true
             end,
+            layout_config = {
+                prompt_position = "top",
+                width = config.options.window.width_ratio,
+                height = config.options.window.height_ratio,
+            },
         })
 
         -- Open the picker
@@ -411,6 +416,11 @@ function M.enter_search_mode()
                 end)
                 return true
             end,
+            layout_config = {
+                prompt_position = "top",
+                width = config.options.window.width_ratio,
+                height = config.options.window.height_ratio,
+            },
         })
 
         -- Open the picker
