@@ -45,6 +45,10 @@ end
 -- Format buffer path based on configuration
 local function format_path(bufnr)
 	local name = api.nvim_buf_get_name(bufnr)
+	if name == '' then
+		return '[No Name]'
+	end
+
 	local path_display = config.options.display.path_display
 
 	if name == "" then
@@ -616,8 +620,11 @@ function M.fzf_search()
     for _, buf in ipairs(buffers) do
         table.insert(source, buf.display)
         previewer[buf.display] = function()
-            local lines = api.nvim_buf_get_lines(buf.bufnr, 0, -1, false)
-            return table.concat(lines, '\n')
+            if api.nvim_buf_is_valid(buf.bufnr) then
+                local lines = api.nvim_buf_get_lines(buf.bufnr, 0, -1, false)
+                return table.concat(lines, '\n')
+            end
+            return ''
         end
     end
 
