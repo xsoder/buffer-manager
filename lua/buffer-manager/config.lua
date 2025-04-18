@@ -47,18 +47,15 @@ M.options = {
 	},
 }
 
--- Apply user configuration
 function M.setup(opts)
 	opts = opts or {}
 	M.options = vim.tbl_deep_extend("force", M.options, opts)
 
-	-- Check if devicons is available
 	if M.options.use_devicons and not pcall(require, "nvim-web-devicons") then
 		M.options.use_devicons = false
 		vim.notify("buffer-manager.nvim: nvim-web-devicons not found, disabling icons", vim.log.levels.WARN)
 	end
 
-	-- Check for FZF dependency
 	if M.options.fzf.enabled then
 		local has_fzf = pcall(require, "fzf-lua")
 		if not has_fzf then
@@ -70,7 +67,6 @@ function M.setup(opts)
 		end
 	end
 
-	-- Check for ripgrep dependency
 	if M.options.ripgrep.enabled then
 		local rg_exists = vim.fn.executable("rg") == 1
 		if not rg_exists then
@@ -82,11 +78,9 @@ function M.setup(opts)
 		end
 	end
 
-	-- Setup highlights
 	M.setup_highlights()
 end
 
--- Setup highlight groups
 function M.setup_highlights()
 	local highlights = {
 		BufferManagerNormal = { link = "Normal" },

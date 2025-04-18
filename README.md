@@ -4,6 +4,7 @@ A Neovim plugin that provides buffer management with a clean, interactive UI.
 
 ![Buffer Manager Screenshot](fzf.png)
 ![Buffer Manager Screenshot](base.png)
+![Bugger Manager Screenshot](help.png)
 
 ## Features
 

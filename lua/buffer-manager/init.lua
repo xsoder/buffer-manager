@@ -17,7 +17,6 @@ function M.setup(opts)
 		vim.keymap.set("n", config.options.mappings.open, ui.open, { noremap = true, silent = true })
 		vim.keymap.set("n", open_key, ui.open, { noremap = true, silent = true })
 
-		-- Vertical and horizontal splits
 		vim.keymap.set("n", config.options.mappings.vertical, ui.open_vertical, { noremap = true, silent = true })
 		vim.keymap.set("n", vertical_key, ui.open_vertical, { noremap = true, silent = true })
 
@@ -26,12 +25,9 @@ function M.setup(opts)
 
 		-- FZF search (<Space>gf)
 		vim.keymap.set("n", "<Space>gf", ui.fzf_search, { noremap = true, silent = true })
-
-		-- No notification needed
 	end
 end
 
--- Export public API functions
 M.open = ui.open
 M.open_vertical = ui.open_vertical
 M.open_horizontal = ui.open_horizontal

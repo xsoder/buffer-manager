@@ -128,7 +128,6 @@ local function update_buffer_list()
 	-- Clear buffer contents
 	api.nvim_buf_set_lines(state.buffer, 0, -1, false, lines)
 
-	-- Add search prompt if in search mode
 	if state.search_mode then
 		local prompt_text = config.options.search.prompt .. state.search_query
 		api.nvim_buf_set_lines(state.buffer, #lines, #lines, false, { "" })
@@ -137,7 +136,6 @@ local function update_buffer_list()
 
 	api.nvim_buf_set_option(state.buffer, "modifiable", false)
 
-	-- Ensure cursor position is valid
 	if state.selected_line > #state.buffers then
 		state.selected_line = #state.buffers > 0 and #state.buffers or 1
 	end
@@ -145,7 +143,6 @@ local function update_buffer_list()
 	-- Move cursor to the selected line
 	if state.win_id and api.nvim_win_is_valid(state.win_id) and #state.buffers > 0 then
 		if state.search_mode then
-			-- Position cursor at end of search prompt
 			local last_line = api.nvim_buf_line_count(state.buffer)
 			local prompt_text = config.options.search.prompt .. state.search_query
 			api.nvim_win_set_cursor(state.win_id, { last_line, #prompt_text })
@@ -200,7 +197,6 @@ local function create_window()
 	return api.nvim_open_win(state.buffer, true, opts)
 end
 
--- Function to enter search mode
 function M.enter_search_mode()
 	if not state.buffer or not api.nvim_buf_is_valid(state.buffer) then
 		return
@@ -210,38 +206,31 @@ function M.enter_search_mode()
 	state.search_query = ""
 	state.original_buffers = vim.deepcopy(state.buffers)
 
-	-- Set up search mode keymaps
 	local function map(mode, key, action)
 		api.nvim_buf_set_keymap(state.buffer, mode, key, action, { silent = true, noremap = true })
 	end
 
-	-- Clear existing keymaps
 	for _, key in ipairs({ "j", "k", "<Down>", "<Up>", "<CR>", "<2-LeftMouse>", "d", "D", "q", "<Esc>", "v", "s", "/" }) do
 		pcall(function()
 			api.nvim_buf_del_keymap(state.buffer, "n", key)
 		end)
 	end
 
-	-- Set up search specific keymaps
 	map("n", "<CR>", ":lua require('buffer-manager.ui').apply_search()<CR>")
 	map("n", "<Esc>", ":lua require('buffer-manager.ui').exit_search_mode()<CR>")
 
-	-- Set up character keys for search input
 	local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./\\:"
 	for i = 1, #chars do
 		local c = chars:sub(i, i)
 		map("n", c, string.format(':lua require("buffer-manager.ui").add_to_search("%s")<CR>', c))
 	end
 
-	-- Handle special keys
 	map("n", "<BS>", ':lua require("buffer-manager.ui").remove_from_search()<CR>')
 	map("n", "<Space>", ':lua require("buffer-manager.ui").add_to_search(" ")<CR>')
 
-	-- Show search prompt and update display
 	update_buffer_list()
 end
 
--- Function to handle search input
 function M.add_to_search(char)
 	if not state.search_mode then
 		return
@@ -251,7 +240,6 @@ function M.add_to_search(char)
 	M.filter_buffers()
 end
 
--- Function to handle backspace in search
 function M.remove_from_search()
 	if not state.search_mode or #state.search_query == 0 then
 		return
@@ -261,15 +249,12 @@ function M.remove_from_search()
 	M.filter_buffers()
 end
 
--- Apply search results and exit search mode
 function M.apply_search()
 	if not state.search_mode then
 		return
 	end
 
 	state.search_mode = false
-
-	-- If no results, restore original buffers
 	if #state.buffers == 0 then
 		state.buffers = state.original_buffers
 	end
@@ -323,13 +308,11 @@ function M.filter_buffers()
 	update_buffer_list()
 end
 
--- Set normal mode keymaps
 function set_normal_keymaps()
 	if not state.buffer or not api.nvim_buf_is_valid(state.buffer) then
 		return
 	end
 
-	-- Clear existing keymaps
 	for _, key in ipairs({ "j", "k", "<Down>", "<Up>", "<CR>", "<2-LeftMouse>", "d", "D", "q", "<Esc>", "v", "s", "/" }) do
 		pcall(function()
 			api.nvim_buf_del_keymap(state.buffer, "n", key)
@@ -371,11 +354,9 @@ function set_normal_keymaps()
 
 	map("n", "v", ":lua require('buffer-manager.ui').select_buffer('vertical')<CR>")
 	map("n", "s", ":lua require('buffer-manager.ui').select_buffer('horizontal')<CR>")
-	
-	-- Add help keybinding
+
 	map("n", "?", ":lua require('buffer-manager.ui').show_help()<CR>")
 
-	-- Add search mappings
 	if config.options.search.enabled then
 		map("n", config.options.search.keybinding, ":lua require('buffer-manager.ui').enter_search_mode()<CR>")
 	end
@@ -428,19 +409,16 @@ function M.open()
 	api.nvim_win_set_option(state.win_id, "winhighlight", "Normal:BufferManagerNormal,FloatBorder:BufferManagerBorder")
 end
 
--- Open in vertical split
 function M.open_vertical()
 	state.split_type = "vertical"
 	M.open()
 end
 
--- Open in horizontal split
 function M.open_horizontal()
 	state.split_type = "horizontal"
 	M.open()
 end
 
--- Close the buffer window
 function M.close()
 	if state.win_id and api.nvim_win_is_valid(state.win_id) then
 		api.nvim_win_close(state.win_id, true)
@@ -495,7 +473,6 @@ function M.select_buffer(split_type)
 	api.nvim_win_set_buf(api.nvim_get_current_win(), selected)
 end
 
--- Delete the selected buffer
 function M.delete_buffer()
 	if state.search_mode then
 		return
@@ -537,7 +514,6 @@ function M.ripgrep_search()
 			return
 		end
 
-		-- Get list of buffer paths
 		local buffer_paths = {}
 		for _, bufnr in ipairs(state.buffers) do
 			local path = api.nvim_buf_get_name(bufnr)
@@ -588,7 +564,6 @@ function M.ripgrep_search()
 	end)
 end
 
--- FZF search through buffer names and content
 function M.fzf_search()
 	if not has_fzf then
 		M.open()
@@ -762,7 +737,6 @@ function M.show_help()
 		"   /                    : Enter search mode",
 	}
 
-	-- Add conditional keybindings based on configuration
 	if config.options.fzf.enabled then
 		table.insert(lines, "   " .. config.options.fzf.keybinding .. "                    : Open FZF fuzzy finder")
 	end
@@ -772,7 +746,7 @@ function M.show_help()
 	end
 
 	table.insert(lines, "")
-	table.insert(lines, " Other:") 
+	table.insert(lines, " Other:")
 	table.insert(lines, "   ?                    : Show this help")
 	table.insert(lines, "   q/Esc                : Close buffer manager/help")
 	table.insert(lines, "")
