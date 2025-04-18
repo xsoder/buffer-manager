@@ -538,6 +538,14 @@ function M.fzf_search()
 		if api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, "buflisted") then
 			local name = api.nvim_buf_get_name(bufnr)
 			local filename = fn.fnamemodify(name, ":t")
+			local line_pos = ""
+
+			-- Get current line position for the buffer
+			if api.nvim_get_current_buf() == bufnr then
+				local cursor_pos = api.nvim_win_get_cursor(0)
+				line_pos = cursor_pos[1]
+			end
+
 			local function format_buffer(bufnr)
 				if not api.nvim_buf_is_valid(bufnr) then
 					return nil
@@ -552,14 +560,16 @@ function M.fzf_search()
 				local path = format_path(bufnr)
 				local modified = api.nvim_buf_get_option(bufnr, "modified") and " [+]" or ""
 				local current = bufnr == api.nvim_get_current_buf() and " *" or ""
+				local line_display = line_pos ~= "" and string.format(" [%d]", line_pos) or ""
 
-				return string.format("%s %s%s%s", icon, path, modified, current)
+				return string.format("%s %s%s%s%s", icon, path, modified, current, line_display)
 			end
 
 			table.insert(buffers, {
 				name = name,
 				display = format_buffer(bufnr),
 				bufnr = bufnr,
+				line_pos = line_pos,
 			})
 		end
 	end
@@ -574,22 +584,72 @@ function M.fzf_search()
 		end
 	end
 
+	-- Generate preview function that shows buffer content
+	local preview_fn = function(_, item)
+		for _, buf in ipairs(buffers) do
+			if buf.display == item then
+				local bufnr = buf.bufnr
+				if api.nvim_buf_is_valid(bufnr) then
+					local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+					
+					-- Add line numbers to preview
+					local numbered_lines = {}
+					for i, line in ipairs(lines) do
+						table.insert(numbered_lines, string.format("%4d │ %s", i, line))
+					end
+					
+					-- Highlight current line if available
+					local current_line = buf.line_pos
+					if current_line and current_line > 0 and current_line <= #numbered_lines then
+						-- Add a marker to the current line
+						numbered_lines[current_line] = string.format("%4d ▶ %s", current_line, lines[current_line])
+					end
+					
+					return numbered_lines, { syntax = vim.bo[bufnr].filetype }
+				end
+				break
+			end
+		end
+		return {}, {}
+	end
+
+	-- Create a beautiful UI with Telescope-like appearance
 	fzf.fzf_exec(source, {
 		prompt = config.options.fzf.prompt,
 		fzf_opts = {
 			["--layout"] = "reverse",
 			["--info"] = "inline",
-			["--no-preview"] = "",
+			["--pointer"] = "➜",
+			["--marker"] = "✓",
+			["--header"] = "CTRL-s: horizontal split | CTRL-v: vertical split | CTRL-d: delete buffer",
+			["--color"] = "bg+:-1,fg+:4,hl:5,hl+:5,prompt:6,pointer:1,marker:2,spinner:1,header:4",
+			["--border"] = "rounded",
 		},
 		winopts = {
-			height = config.options.window.height_ratio,
-			width = config.options.window.width_ratio,
-			border = config.options.window.border,
+			height = 0.8,
+			width = 0.9,
+			border = "rounded",
 			relative = "editor",
-			row = math.floor((vim.o.lines - math.floor(vim.o.lines * config.options.window.height_ratio)) / 2),
-			col = math.floor((vim.o.columns - math.floor(vim.o.columns * config.options.window.width_ratio)) / 2),
+			row = math.floor((vim.o.lines - math.floor(vim.o.lines * 0.8)) / 2),
+			col = math.floor((vim.o.columns - math.floor(vim.o.columns * 0.9)) / 2),
 			title = " Buffer Manager ",
 			title_pos = "center",
+			preview = {
+				border = "rounded",
+				title = "Buffer Preview",
+				title_pos = "center",
+				vertical = "right:50%",
+				horizontal = "right:50%",
+				layout = "vertical",
+				wrap = "nowrap",
+				delay = 100,
+			},
+		},
+		previewers = {
+			custom = {
+				_preview_fn = preview_fn,
+				title = "Buffer Preview",
+			},
 		},
 		actions = {
 			["default"] = function(selected)

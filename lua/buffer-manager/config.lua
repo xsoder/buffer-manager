@@ -47,7 +47,7 @@ function M.setup(opts)
 		vim.notify("buffer-manager.nvim: nvim-web-devicons not found, disabling icons", vim.log.levels.WARN)
 	end
 
-	if M.options.fzf.enabled then
+	if M.options.fzf.enabled thenui
 		local has_fzf = pcall(require, "fzf-lua")
 		if not has_fzf then
 			M.options.fzf.enabled = false
