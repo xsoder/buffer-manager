@@ -13,14 +13,9 @@ if not has_fzf then
 	)
 end
 
--- Check if nui.nvim is available
+-- Check if nui.nvim is available (silently)
 local has_nui, nui = pcall(require, "nui")
-if not has_nui then
-	vim.notify(
-		"buffer-manager.nvim: nui.nvim not found. Install it with your package manager for enhanced UI features.",
-		vim.log.levels.WARN
-	)
-end
+-- We'll use nui if available, but won't show warnings if it's not
 
 -- Import nui components if available
 local NuiPopup = has_nui and require("nui.popup") or nil
