@@ -668,7 +668,7 @@ function M.show_help()
 		"",
 		" Other:",
 		"   ?                    : Show this help",
-		"   q/Esc                : Close buffer manager/help",
+		"   q or Esc              : Close buffer manager/help",
 		"",
 		" Press any key to close this help window",
 	}
