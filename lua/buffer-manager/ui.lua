@@ -614,6 +614,15 @@ function M.fzf_search()
 	end
 
 	-- Create a beautiful UI with Telescope-like appearance
+	local use_telescope_style = config.options.fzf.use_telescope_style or true
+	local border_style = config.options.fzf.border or "rounded"
+	local window_width = config.options.fzf.window_width or 0.9
+	local window_height = config.options.fzf.window_height or 0.8
+	
+	-- Force reload fzf-lua to ensure our changes take effect
+	package.loaded["fzf-lua"] = nil
+	fzf = require("fzf-lua")
+	
 	fzf.fzf_exec(source, {
 		prompt = config.options.fzf.prompt,
 		fzf_opts = {
@@ -623,23 +632,23 @@ function M.fzf_search()
 			["--marker"] = "✓",
 			["--header"] = "CTRL-s: horizontal split | CTRL-v: vertical split | CTRL-d: delete buffer",
 			["--color"] = "bg+:-1,fg+:4,hl:5,hl+:5,prompt:6,pointer:1,marker:2,spinner:1,header:4",
-			["--border"] = "rounded",
+			["--border"] = border_style,
 		},
 		winopts = {
-			height = 0.8,
-			width = 0.9,
-			border = "rounded",
+			height = window_height,
+			width = window_width,
+			border = border_style,
 			relative = "editor",
-			row = math.floor((vim.o.lines - math.floor(vim.o.lines * 0.8)) / 2),
-			col = math.floor((vim.o.columns - math.floor(vim.o.columns * 0.9)) / 2),
+			row = math.floor((vim.o.lines - math.floor(vim.o.lines * window_height)) / 2),
+			col = math.floor((vim.o.columns - math.floor(vim.o.columns * window_width)) / 2),
 			title = " Buffer Manager ",
 			title_pos = "center",
 			preview = {
-				border = "rounded",
+				border = border_style,
 				title = "Buffer Preview",
 				title_pos = "center",
-				vertical = "right:50%",
-				horizontal = "right:50%",
+				vertical = config.options.fzf.preview_window or "right:50%",
+				horizontal = config.options.fzf.preview_window or "right:50%",
 				layout = "vertical",
 				wrap = "nowrap",
 				delay = 100,

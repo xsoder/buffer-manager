@@ -33,8 +33,10 @@ M.options = {
 		prompt = "> ",
 		preview = true,
 		preview_window = "right:50%",
-		window_width = 0.8,
-		Searchwindow_height = 0.7,
+		window_width = 0.9,
+		window_height = 0.8,
+		border = "rounded",
+		use_telescope_style = true,
 	},
 }
 
@@ -47,7 +49,7 @@ function M.setup(opts)
 		vim.notify("buffer-manager.nvim: nvim-web-devicons not found, disabling icons", vim.log.levels.WARN)
 	end
 
-	if M.options.fzf.enabled thenui
+	if M.options.fzf.enabled then
 		local has_fzf = pcall(require, "fzf-lua")
 		if not has_fzf then
 			M.options.fzf.enabled = false
