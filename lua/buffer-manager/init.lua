@@ -21,17 +21,17 @@ function M.setup(opts)
 		local open_key = config.options.mappings.open:gsub("<leader>", "<Space>")
 		local vertical_key = config.options.mappings.vertical:gsub("<leader>", "<Space>")
 		local horizontal_key = config.options.mappings.horizontal:gsub("<leader>", "<Space>")
-		
+
 		-- Set up keybindings with both leader formats for compatibility
 		vim.keymap.set("n", config.options.mappings.open, open_fzf, { noremap = true, silent = true })
 		vim.keymap.set("n", open_key, open_fzf, { noremap = true, silent = true })
-		
+
 		vim.keymap.set("n", config.options.mappings.vertical, ui.open_vertical, { noremap = true, silent = true })
 		vim.keymap.set("n", vertical_key, ui.open_vertical, { noremap = true, silent = true })
-		
+
 		vim.keymap.set("n", config.options.mappings.horizontal, ui.open_horizontal, { noremap = true, silent = true })
 		vim.keymap.set("n", horizontal_key, ui.open_horizontal, { noremap = true, silent = true })
-		
+
 		-- Print confirmation message
 		vim.notify("Buffer Manager: Keybindings set up - " .. open_key .. " to open", vim.log.levels.INFO)
 	end

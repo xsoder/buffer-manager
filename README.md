@@ -65,8 +65,8 @@ require('buffer-manager').setup({
     horizontal = "<leader>bs"
   },
   window = {
-    width_ratio = 0.6,
-    height_ratio = 0.6,
+    width_ratio = 0.3,
+    height_ratio = 0.3,
     border = "rounded",
     position = "center",
   },
