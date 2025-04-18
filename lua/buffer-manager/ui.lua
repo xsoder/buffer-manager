@@ -616,77 +616,82 @@ function M.fzf_search()
         table.insert(source, buf.display)
     end
 
-    fzf.fzf_exec(
-        source,
-        {
-            prompt = config.options.fzf.prompt,
-            preview = config.options.fzf.preview,
-            preview_window = config.options.fzf.preview_window,
-            actions = {
-                ['default'] = function(selected)
-                    if selected and #selected > 0 then
-                        local display = selected[1]
-                        for _, buf in ipairs(buffers) do
-                            if buf.display == display then
-                                api.nvim_set_current_buf(buf.bufnr)
-                                break
-                            end
-                        end
-                    end
-                end,
-                ['ctrl-v'] = function(selected)
-                    if selected and #selected > 0 then
-                        local display = selected[1]
-                        for _, buf in ipairs(buffers) do
-                            if buf.display == display then
-                                vim.cmd('vsplit')
-                                api.nvim_set_current_buf(buf.bufnr)
-                                break
-                            end
-                        end
-                    end
-                end,
-                ['ctrl-s'] = function(selected)
-                    if selected and #selected > 0 then
-                        local display = selected[1]
-                        for _, buf in ipairs(buffers) do
-                            if buf.display == display then
-                                vim.cmd('split')
-                                api.nvim_set_current_buf(buf.bufnr)
-                                break
-                            end
-                        end
-                    end
-                end,
-                ['ctrl-d'] = function(selected)
-                    if selected and #selected > 0 then
-                        local display = selected[1]
-                        for _, buf in ipairs(buffers) do
-                            if buf.display == display then
-                                if api.nvim_buf_get_option(buf.bufnr, 'modified') then
-                                    local choice = vim.fn.confirm('Buffer is modified. Save changes?', '&Yes\n&No\n&Cancel', 1)
-                                    if choice == 1 then
-                                        api.nvim_buf_call(buf.bufnr, function()
-                                            vim.cmd('write')
-                                        end)
-                                    elseif choice == 3 then
-                                        return
-                                    end
-                                end
-                                pcall(api.nvim_buf_delete, buf.bufnr, { force = false })
-                                break
-                            end
+    fzf.fzf_exec(source, {
+        prompt = config.options.fzf.prompt,
+        fzf_opts = {
+            ['--layout'] = 'reverse',
+            ['--info'] = 'inline',
+            ['--preview-window'] = config.options.fzf.preview_window,
+        },
+        winopts = {
+            height = 0.8,
+            width = 0.8,
+            border = config.options.window.border,
+            preview = {
+                hidden = not config.options.fzf.preview,
+                layout = 'vertical',
+                vertical = 'right:50%',
+            },
+        },
+        actions = {
+            ['default'] = function(selected)
+                if selected and #selected > 0 then
+                    local display = selected[1]
+                    for _, buf in ipairs(buffers) do
+                        if buf.display == display then
+                            api.nvim_set_current_buf(buf.bufnr)
+                            break
                         end
                     end
                 end
-            },
-            winopts = {
-                height = 0.8,
-                width = 0.8,
-                border = config.options.window.border,
-            }
+            end,
+            ['ctrl-v'] = function(selected)
+                if selected and #selected > 0 then
+                    local display = selected[1]
+                    for _, buf in ipairs(buffers) do
+                        if buf.display == display then
+                            vim.cmd('vsplit')
+                            api.nvim_set_current_buf(buf.bufnr)
+                            break
+                        end
+                    end
+                end
+            end,
+            ['ctrl-s'] = function(selected)
+                if selected and #selected > 0 then
+                    local display = selected[1]
+                    for _, buf in ipairs(buffers) do
+                        if buf.display == display then
+                            vim.cmd('split')
+                            api.nvim_set_current_buf(buf.bufnr)
+                            break
+                        end
+                    end
+                end
+            end,
+            ['ctrl-d'] = function(selected)
+                if selected and #selected > 0 then
+                    local display = selected[1]
+                    for _, buf in ipairs(buffers) do
+                        if buf.display == display then
+                            if api.nvim_buf_get_option(buf.bufnr, 'modified') then
+                                local choice = vim.fn.confirm('Buffer is modified. Save changes?', '&Yes\n&No\n&Cancel', 1)
+                                if choice == 1 then
+                                    api.nvim_buf_call(buf.bufnr, function()
+                                        vim.cmd('write')
+                                    end)
+                                elseif choice == 3 then
+                                    return
+                                end
+                            end
+                            pcall(api.nvim_buf_delete, buf.bufnr, { force = false })
+                            break
+                        end
+                    end
+                end
+            end
         }
-    )
+    })
 end
 
 return M
