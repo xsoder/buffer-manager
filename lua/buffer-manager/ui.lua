@@ -1,7 +1,3 @@
-local api = vim.api
-local fn = vim.fn
-local config = require("buffer-manager.config")
-
 -- Check if required dependencies are available
 local has_fzf, fzf = pcall(require, "fzf-lua")
 if not has_fzf then
@@ -247,8 +243,9 @@ local function create_window()
             sorter = sorters.get_generic_fuzzy_sorter(),
             previewer = previewers.buffer_previewer,
             attach_mappings = function(prompt_bufnr, map)
-                actions.select_default:replace(function()
+                actions.select_default:replace(function(_prompt_bufnr)
                     local selection = action_state.get_selected_entry()
+                    actions.close(_prompt_bufnr)
                     if selection then
                         M.select_buffer()
                     end
@@ -408,8 +405,9 @@ function M.enter_search_mode()
             sorter = sorters.get_generic_fuzzy_sorter(),
             previewer = previewers.buffer_previewer,
             attach_mappings = function(prompt_bufnr, map)
-                actions.select_default:replace(function()
+                actions.select_default:replace(function(_prompt_bufnr)
                     local selection = action_state.get_selected_entry()
+                    actions.close(_prompt_bufnr)
                     if selection then
                         M.apply_search()
                     end
@@ -599,8 +597,8 @@ end
 function M.close()
     -- Close telescope picker if it exists
     if has_telescope then
-        -- Close the picker
-        vim.cmd("close")
+        -- Force-close the picker to avoid modified buffer errors
+        vim.cmd("close!")
     else
         -- Otherwise close the window normally
         if state.win_id and api.nvim_win_is_valid(state.win_id) then
@@ -653,8 +651,10 @@ function M.select_buffer(split_type)
         return
     end
 
-    local current_win = api.nvim_get_current_win()
-    M.close()
+    -- only close native UI; telescope picker closed via attach_mappings
+    if not has_telescope then
+        M.close()
+    end
 
     if split_type == "vertical" then
         vim.cmd("vsplit")
