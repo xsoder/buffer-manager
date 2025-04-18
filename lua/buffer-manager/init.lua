@@ -26,9 +26,8 @@ function M.setup(opts)
 		vim.keymap.set("n", horizontal_key, ui.open_horizontal, { noremap = true, silent = true })
 	end
 
-	-- IMPORTANT: Always set up FZF search with <Space>gf, regardless of default_mappings setting
-	-- This ensures the global <Space>gf keybinding is always available
-	vim.keymap.set("n", "<Space>gf", ui.fzf_search, { noremap = true, silent = true })
+	-- Set up global FZF keybinding (Space+gf)
+	vim.api.nvim_set_keymap("n", "<Space>gf", ":lua require('buffer-manager.ui').fzf_search()<CR>", { noremap = true, silent = true })
 end
 
 M.open = ui.open
