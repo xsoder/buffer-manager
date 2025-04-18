@@ -512,20 +512,43 @@ function M.fzf_search()
 		end
 	end
 
-	fzf.fzf_exec(buffers, {
+	local fzf_items = {}
+	for _, buf in ipairs(buffers) do
+		table.insert(fzf_items, buf.display)
+	end
+
+	fzf.fzf_exec(fzf_items, {
 		prompt = "Buffers❯ ",
 		previewer = "builtin",
 		actions = {
 			["default"] = function(selected)
-				api.nvim_set_current_buf(selected[1].bufnr)
+				local selected_buf = selected[1]
+				for _, buf in ipairs(buffers) do
+					if buf.display == selected_buf then
+						api.nvim_set_current_buf(buf.bufnr)
+						break
+					end
+				end
 			end,
 			["ctrl-v"] = function(selected)
 				api.nvim_command("vsplit")
-				api.nvim_set_current_buf(selected[1].bufnr)
+				local selected_buf = selected[1]
+				for _, buf in ipairs(buffers) do
+					if buf.display == selected_buf then
+						api.nvim_set_current_buf(buf.bufnr)
+						break
+					end
+				end
 			end,
 			["ctrl-x"] = function(selected)
 				api.nvim_command("split")
-				api.nvim_set_current_buf(selected[1].bufnr)
+				local selected_buf = selected[1]
+				for _, buf in ipairs(buffers) do
+					if buf.display == selected_buf then
+						api.nvim_set_current_buf(buf.bufnr)
+						break
+					end
+				end
 			end
 		}
 	})
