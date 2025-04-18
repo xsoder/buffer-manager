@@ -492,154 +492,42 @@ function M.delete_buffer()
 	end
 end
 
--- FZF search function - used only outside buffer manager
 function M.fzf_search()
 	if not has_fzf then
-		M.open()
-		return
-	end
-
-	if state.search_mode then
-		return
-	end
-
-	local valid_buffers = {}
-	for _, bufnr in ipairs(api.nvim_list_bufs()) do
-		if
-			api.nvim_buf_is_valid(bufnr)
-			and api.nvim_buf_is_loaded(bufnr)
-			and api.nvim_buf_get_option(bufnr, "buflisted")
-		then
-			local name = api.nvim_buf_get_name(bufnr)
-			if name ~= "" then
-				table.insert(valid_buffers, bufnr)
-			end
-		end
-	end
-
-	if #valid_buffers == 0 then
-		vim.notify("No valid buffers to show", vim.log.levels.INFO)
+		vim.notify("FZF-Lua not installed", vim.log.levels.ERROR)
 		return
 	end
 
 	local buffers = {}
-
 	for _, bufnr in ipairs(api.nvim_list_bufs()) do
 		if api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, "buflisted") then
 			local name = api.nvim_buf_get_name(bufnr)
-			local filename = fn.fnamemodify(name, ":t")
-			local function format_buffer(bufnr)
-				if not api.nvim_buf_is_valid(bufnr) then
-					return nil
-				end
-
-				local name = api.nvim_buf_get_name(bufnr)
-				if name == "" then
-					return nil
-				end
-
-				local icon = get_icon(bufnr)
-				local path = format_path(bufnr)
-				local modified = api.nvim_buf_get_option(bufnr, "modified") and " [+]" or ""
-				local current = bufnr == api.nvim_get_current_buf() and " *" or ""
-
-				return string.format("%s %s%s%s", icon, path, modified, current)
-			end
-
-			table.insert(buffers, {
-				name = name,
-				display = format_buffer(bufnr),
-				bufnr = bufnr,
-			})
-		end
-	end
-
-	local source = {}
-	for _, buf in ipairs(buffers) do
-		if api.nvim_buf_is_valid(buf.bufnr) then
-			local name = api.nvim_buf_get_name(buf.bufnr)
 			if name ~= "" then
-				table.insert(source, buf.display)
+				table.insert(buffers, {
+					bufnr = bufnr,
+					name = name,
+					display = fn.fnamemodify(name, ":t")
+				})
 			end
 		end
 	end
 
-	fzf.fzf_exec(source, {
-		prompt = config.options.fzf.prompt,
-		fzf_opts = {
-			["--layout"] = "reverse",
-			["--info"] = "inline",
-			["--no-preview"] = "",
-		},
-		winopts = {
-			height = config.options.window.height_ratio,
-			width = config.options.window.width_ratio,
-			border = config.options.window.border,
-			relative = "editor",
-			row = math.floor((vim.o.lines - math.floor(vim.o.lines * config.options.window.height_ratio)) / 2),
-			col = math.floor((vim.o.columns - math.floor(vim.o.columns * config.options.window.width_ratio)) / 2),
-			title = " Buffer Manager ",
-			title_pos = "center",
-		},
+	fzf.fzf_exec(buffers, {
+		prompt = "Buffers❯ ",
+		previewer = "builtin",
 		actions = {
 			["default"] = function(selected)
-				if selected and #selected > 0 then
-					local display = selected[1]
-					for _, buf in ipairs(buffers) do
-						if buf.display == display then
-							api.nvim_set_current_buf(buf.bufnr)
-							break
-						end
-					end
-				end
+				api.nvim_set_current_buf(selected[1].bufnr)
 			end,
 			["ctrl-v"] = function(selected)
-				if selected and #selected > 0 then
-					local display = selected[1]
-					for _, buf in ipairs(buffers) do
-						if buf.display == display then
-							vim.cmd("vsplit")
-							api.nvim_set_current_buf(buf.bufnr)
-							break
-						end
-					end
-				end
+				api.nvim_command("vsplit")
+				api.nvim_set_current_buf(selected[1].bufnr)
 			end,
-			["ctrl-s"] = function(selected)
-				if selected and #selected > 0 then
-					local display = selected[1]
-					for _, buf in ipairs(buffers) do
-						if buf.display == display then
-							vim.cmd("split")
-							api.nvim_set_current_buf(buf.bufnr)
-							break
-						end
-					end
-				end
-			end,
-			["ctrl-d"] = function(selected)
-				if selected and #selected > 0 then
-					local display = selected[1]
-					for _, buf in ipairs(buffers) do
-						if buf.display == display then
-							if api.nvim_buf_get_option(buf.bufnr, "modified") then
-								local choice =
-									vim.fn.confirm("Buffer is modified. Save changes?", "&Yes\n&No\n&Cancel", 1)
-								if choice == 1 then
-									api.nvim_buf_call(buf.bufnr, function()
-										vim.cmd("write")
-									end)
-								elseif choice == 3 then
-									return
-								end
-							end
-							pcall(api.nvim_buf_delete, buf.bufnr, { force = false })
-							break
-						end
-					end
-				end
-			end,
-		},
+			["ctrl-x"] = function(selected)
+				api.nvim_command("split")
+				api.nvim_set_current_buf(selected[1].bufnr)
+			end
+		}
 	})
 end
 
