@@ -665,8 +665,8 @@ function M.fzf_search()
 			["--no-preview"] = "",
 		},
 		winopts = {
-			height = 0.6,
-			width = 0.8,
+			height = config.options.fzf.window_height or 0.7,
+			width = config.options.fzf.window_width or 0.8,
 			border = config.options.window.border,
 		},
 		actions = {

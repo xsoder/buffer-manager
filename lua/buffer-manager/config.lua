@@ -33,6 +33,8 @@ M.options = {
 		prompt = "Buffer Search> ",
 		preview = true,
 		preview_window = "right:50%",
+		window_width = 0.8,
+		window_height = 0.7,
 	},
 	ripgrep = {
 		enabled = true,
