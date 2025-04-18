@@ -23,8 +23,8 @@ function M.setup(opts)
 		vim.keymap.set("n", config.options.mappings.horizontal, ui.open_horizontal, { noremap = true, silent = true })
 		vim.keymap.set("n", horizontal_key, ui.open_horizontal, { noremap = true, silent = true })
 
-		-- FZF search (<Space>gf)
-		vim.keymap.set("n", "<Space>gf", ui.fzf_search, { noremap = true, silent = true })
+		-- FZF search (<Space>ll)
+		vim.keymap.set("n", "<Space>ll", ui.fzf_search, { noremap = true, silent = true })
 	end
 end
 

@@ -493,8 +493,14 @@ function M.delete_buffer()
 end
 
 function M.fzf_search()
-	if not has_fzf then
-		vim.notify("FZF-Lua not installed", vim.log.levels.ERROR)
+	if not package.loaded["fzf-lua"] then
+		vim.notify("FZF-Lua not loaded. Please install fzf-lua.nvim plugin", vim.log.levels.ERROR)
+		return
+	end
+
+	local fzf = require("fzf-lua")
+	if not fzf or not fzf.fzf_exec then
+		vim.notify("FZF-Lua not properly initialized", vim.log.levels.ERROR)
 		return
 	end
 
@@ -512,26 +518,38 @@ function M.fzf_search()
 		end
 	end
 
+	if #buffers == 0 then
+		vim.notify("No buffers available", vim.log.levels.INFO)
+		return
+	end
+
 	local fzf_items = {}
 	for _, buf in ipairs(buffers) do
 		table.insert(fzf_items, buf.display)
 	end
 
-	fzf.fzf_exec(fzf_items, {
-		prompt = "Search Buffers❯ ",
-		previewer = "builtin",
-		actions = {
-			["default"] = function(selected)
-				local selected_buf = selected[1]
-				for _, buf in ipairs(buffers) do
-					if buf.display == selected_buf then
-						api.nvim_set_current_buf(buf.bufnr)
-						break
+	local ok, err = pcall(function()
+		fzf.fzf_exec(fzf_items, {
+			prompt = "Search Buffers❯ ",
+			previewer = "builtin",
+			actions = {
+				["default"] = function(selected)
+					if selected and selected[1] then
+						for _, buf in ipairs(buffers) do
+							if buf.display == selected[1] then
+								api.nvim_set_current_buf(buf.bufnr)
+								break
+							end
+						end
 					end
 				end
-			end
-		}
-	})
+			}
+		})
+	end)
+
+	if not ok then
+		vim.notify("FZF search failed: " .. tostring(err), vim.log.levels.ERROR)
+	end
 end
 
 -- Show help with all available keybindings
@@ -555,7 +573,7 @@ function M.show_help()
 		"",
 		" Search & Find:",
 		"   /                    : Enter search mode",
-		"   Space+gf             : Open FZF fuzzy finder (global keybinding)",
+		"   <Space>ll            : Open FZF fuzzy finder (global keybinding)",
 		"",
 		" Other:",
 		"   ?                    : Show this help",
