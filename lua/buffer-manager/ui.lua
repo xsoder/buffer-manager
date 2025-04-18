@@ -7,7 +7,10 @@ local Job = require("plenary.job")
 local has_fzf, fzf = pcall(require, "fzf-lua")
 if not has_fzf then
 	config.options.fzf.enabled = false
-	vim.notify("buffer-manager.nvim: fzf-lua not found. Install it with your package manager to enable FZF features.", vim.log.levels.INFO)
+	vim.notify(
+		"buffer-manager.nvim: fzf-lua not found. Install it with your package manager to enable FZF features.",
+		vim.log.levels.INFO
+	)
 end
 
 local M = {}

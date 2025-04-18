@@ -30,13 +30,12 @@ M.options = {
 	fzf = {
 		enabled = true,
 		keybinding = "", -- Removed gf keybinding since we use <Space>gf globally
-		prompt = "Buffer Search> ",
+		prompt = "> ",
 		preview = true,
 		preview_window = "right:50%",
 		window_width = 0.8,
 		window_height = 0.7,
 	},
-
 }
 
 function M.setup(opts)
@@ -58,8 +57,6 @@ function M.setup(opts)
 			)
 		end
 	end
-
-
 
 	M.setup_highlights()
 end
