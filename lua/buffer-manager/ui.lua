@@ -11,6 +11,9 @@ local state = {
 	selected_line = 1,
 	buffers = {},
 	split_type = "normal",
+	search_mode = false,
+	search_query = "",
+	original_buffers = {},
 }
 
 -- Check if devicons is available
@@ -93,7 +96,9 @@ local function update_buffer_list()
 		return
 	end
 
-	state.buffers = get_buffer_list()
+	if not state.search_mode then
+		state.buffers = get_buffer_list()
+	end
 
 	local lines = {}
 	for i, bufnr in ipairs(state.buffers) do
@@ -102,17 +107,34 @@ local function update_buffer_list()
 	end
 
 	api.nvim_buf_set_option(state.buffer, "modifiable", true)
+
+	-- Clear buffer contents
 	api.nvim_buf_set_lines(state.buffer, 0, -1, false, lines)
+
+	-- Add search prompt if in search mode
+	if state.search_mode then
+		local prompt_text = config.options.search.prompt .. state.search_query
+		api.nvim_buf_set_lines(state.buffer, #lines, #lines, false, { "" })
+		api.nvim_buf_set_lines(state.buffer, #lines, -1, false, { prompt_text })
+	end
+
 	api.nvim_buf_set_option(state.buffer, "modifiable", false)
 
 	-- Ensure cursor position is valid
-	if state.selected_line > #lines then
-		state.selected_line = #lines > 0 and #lines or 1
+	if state.selected_line > #state.buffers then
+		state.selected_line = #state.buffers > 0 and #state.buffers or 1
 	end
 
 	-- Move cursor to the selected line
-	if state.win_id and api.nvim_win_is_valid(state.win_id) then
-		api.nvim_win_set_cursor(state.win_id, { state.selected_line, 0 })
+	if state.win_id and api.nvim_win_is_valid(state.win_id) and #state.buffers > 0 then
+		if state.search_mode then
+			-- Position cursor at end of search prompt
+			local last_line = api.nvim_buf_line_count(state.buffer)
+			local prompt_text = config.options.search.prompt .. state.search_query
+			api.nvim_win_set_cursor(state.win_id, { last_line, #prompt_text })
+		else
+			api.nvim_win_set_cursor(state.win_id, { state.selected_line, 0 })
+		end
 	end
 end
 
@@ -161,28 +183,179 @@ local function create_window()
 	return api.nvim_open_win(state.buffer, true, opts)
 end
 
+-- Function to enter search mode
+function M.enter_search_mode()
+	if not state.buffer or not api.nvim_buf_is_valid(state.buffer) then
+		return
+	end
+
+	state.search_mode = true
+	state.search_query = ""
+	state.original_buffers = vim.deepcopy(state.buffers)
+
+	-- Show search prompt and update display
+	update_buffer_list()
+
+	-- Setup keymaps for search mode
+	api.nvim_buf_set_keymap(
+		state.buffer,
+		"n",
+		"<CR>",
+		":lua require('buffer-manager.ui').apply_search()<CR>",
+		{ silent = true, noremap = true }
+	)
+	api.nvim_buf_set_keymap(
+		state.buffer,
+		"n",
+		"<Esc>",
+		":lua require('buffer-manager.ui').exit_search_mode()<CR>",
+		{ silent = true, noremap = true }
+	)
+end
+
+-- Function to handle search input
+function M.add_to_search(char)
+	if not state.search_mode then
+		return
+	end
+
+	state.search_query = state.search_query .. char
+	M.filter_buffers()
+end
+
+-- Function to handle backspace in search
+function M.remove_from_search()
+	if not state.search_mode or #state.search_query == 0 then
+		return
+	end
+
+	state.search_query = string.sub(state.search_query, 1, -2)
+	M.filter_buffers()
+end
+
+-- Apply search results and exit search mode
+function M.apply_search()
+	if not state.search_mode then
+		return
+	end
+
+	state.search_mode = false
+
+	-- If no results, restore original buffers
+	if #state.buffers == 0 then
+		state.buffers = state.original_buffers
+	end
+
+	state.original_buffers = {}
+	update_buffer_list()
+
+	-- Restore normal keymaps
+	set_keymaps()
+end
+
+-- Exit search mode without applying
+function M.exit_search_mode()
+	if not state.search_mode then
+		return
+	end
+
+	state.search_mode = false
+	state.search_query = ""
+	state.buffers = state.original_buffers
+	state.original_buffers = {}
+
+	update_buffer_list()
+
+	-- Restore normal keymaps
+	set_keymaps()
+end
+
+-- Filter buffers based on search query
+function M.filter_buffers()
+	if #state.search_query == 0 then
+		state.buffers = vim.deepcopy(state.original_buffers)
+	else
+		state.buffers = {}
+
+		for _, bufnr in ipairs(state.original_buffers) do
+			local name = api.nvim_buf_get_name(bufnr)
+			local filename = fn.fnamemodify(name, ":t")
+
+			-- Case-insensitive matching
+			if
+				string.find(string.lower(filename), string.lower(state.search_query))
+				or string.find(string.lower(name), string.lower(state.search_query))
+			then
+				table.insert(state.buffers, bufnr)
+			end
+		end
+	end
+
+	update_buffer_list()
+end
+
+-- Set up search mode keys
+local function setup_search_keys()
+	-- Add character to search
+	local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./"
+	for i = 1, #chars do
+		local c = chars:sub(i, i)
+		api.nvim_buf_set_keymap(
+			state.buffer,
+			"n",
+			c,
+			string.format(':lua require("buffer-manager.ui").add_to_search("%s")<CR>', c),
+			{ silent = true, noremap = true }
+		)
+	end
+
+	-- Special keys
+	api.nvim_buf_set_keymap(
+		state.buffer,
+		"n",
+		"<BS>",
+		':lua require("buffer-manager.ui").remove_from_search()<CR>',
+		{ silent = true, noremap = true }
+	)
+	api.nvim_buf_set_keymap(
+		state.buffer,
+		"n",
+		"<Space>",
+		':lua require("buffer-manager.ui").add_to_search(" ")<CR>',
+		{ silent = true, noremap = true }
+	)
+end
+
 -- Set buffer-local keymaps
 local function set_keymaps()
+	-- Clear all existing keymaps
+	api.nvim_buf_set_keymap(state.buffer, "n", "", "", { silent = true, noremap = true })
+
 	-- Helper function for setting keymaps
 	local function map(mode, key, action)
 		api.nvim_buf_set_keymap(state.buffer, mode, key, action, { silent = true, noremap = true })
 	end
 
-	map("n", "j", ":lua require('buffer-manager').next_buffer()<CR>")
-	map("n", "k", ":lua require('buffer-manager').prev_buffer()<CR>")
-	map("n", "<Down>", ":lua require('buffer-manager').next_buffer()<CR>")
-	map("n", "<Up>", ":lua require('buffer-manager').prev_buffer()<CR>")
+	map("n", "j", ":lua require('buffer-manager.ui').next_buffer()<CR>")
+	map("n", "k", ":lua require('buffer-manager.ui').prev_buffer()<CR>")
+	map("n", "<Down>", ":lua require('buffer-manager.ui').next_buffer()<CR>")
+	map("n", "<Up>", ":lua require('buffer-manager.ui').prev_buffer()<CR>")
 
-	map("n", "<CR>", ":lua require('buffer-manager').select_buffer()<CR>")
-	map("n", "<2-LeftMouse>", ":lua require('buffer-manager').select_buffer()<CR>")
+	map("n", "<CR>", ":lua require('buffer-manager.ui').select_buffer()<CR>")
+	map("n", "<2-LeftMouse>", ":lua require('buffer-manager.ui').select_buffer()<CR>")
 
-	map("n", "d", ":lua require('buffer-manager').delete_buffer()<CR>")
-	map("n", "D", ":lua require('buffer-manager').delete_buffer()<CR>")
-	map("n", "q", ":lua require('buffer-manager').close()<CR>")
-	map("n", "<Esc>", ":lua require('buffer-manager').close()<CR>")
+	map("n", "d", ":lua require('buffer-manager.ui').delete_buffer()<CR>")
+	map("n", "D", ":lua require('buffer-manager.ui').delete_buffer()<CR>")
+	map("n", "q", ":lua require('buffer-manager.ui').close()<CR>")
+	map("n", "<Esc>", ":lua require('buffer-manager.ui').close()<CR>")
 
-	map("n", "v", ":lua require('buffer-manager').select_buffer('vertical')<CR>")
-	map("n", "s", ":lua require('buffer-manager').select_buffer('horizontal')<CR>")
+	map("n", "v", ":lua require('buffer-manager.ui').select_buffer('vertical')<CR>")
+	map("n", "s", ":lua require('buffer-manager.ui').select_buffer('horizontal')<CR>")
+
+	-- Add search mapping
+	if config.options.search.enabled then
+		map("n", config.options.search.keybinding, ":lua require('buffer-manager.ui').enter_search_mode()<CR>")
+	end
 end
 
 local function set_options()
@@ -201,6 +374,7 @@ local function set_options()
     syntax match BufferManagerNumber /^\s*\d\+:/
     syntax match BufferManagerModified /\[+\]/
     syntax match BufferManagerIndicator /\*$/
+    syntax match BufferManagerSearchPrompt /^Search: .*$/
   ]])
 end
 
@@ -218,6 +392,7 @@ function M.open()
 
 	set_options()
 	set_keymaps()
+	setup_search_keys() -- Set up keys for search mode
 
 	update_buffer_list()
 
@@ -244,23 +419,34 @@ function M.close()
 	state.win_id = nil
 	state.buffer = nil
 	state.split_type = "normal"
+	state.search_mode = false
+	state.search_query = ""
+	state.original_buffers = {}
 end
 
 function M.next_buffer()
-	if #state.buffers > 0 then
-		state.selected_line = math.min(state.selected_line + 1, #state.buffers)
-		api.nvim_win_set_cursor(state.win_id, { state.selected_line, 0 })
+	if state.search_mode or #state.buffers == 0 then
+		return
 	end
+
+	state.selected_line = math.min(state.selected_line + 1, #state.buffers)
+	api.nvim_win_set_cursor(state.win_id, { state.selected_line, 0 })
 end
 
 function M.prev_buffer()
-	if #state.buffers > 0 then
-		state.selected_line = math.max(state.selected_line - 1, 1)
-		api.nvim_win_set_cursor(state.win_id, { state.selected_line, 0 })
+	if state.search_mode or #state.buffers == 0 then
+		return
 	end
+
+	state.selected_line = math.max(state.selected_line - 1, 1)
+	api.nvim_win_set_cursor(state.win_id, { state.selected_line, 0 })
 end
 
 function M.select_buffer(split_type)
+	if state.search_mode then
+		return
+	end
+
 	split_type = split_type or state.split_type
 
 	local selected = state.buffers[state.selected_line]
@@ -282,6 +468,10 @@ end
 
 -- Delete the selected buffer
 function M.delete_buffer()
+	if state.search_mode then
+		return
+	end
+
 	local selected = state.buffers[state.selected_line]
 	if selected then
 		-- Check if buffer is modified

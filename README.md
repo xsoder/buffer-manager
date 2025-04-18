@@ -95,6 +95,9 @@ require('buffer-manager').setup({
 - `v`: Open in vertical split
 - `s`: Open in horizontal split
 - `q` or `<Esc>`: Close buffer manager
+- `/`: enter search mode
+- Type to filter the buffer list in real-time
+- Press `<Enter>` to apply the search filter or `<Esc>` to cancel
 
 ### Commands
 

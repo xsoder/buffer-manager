@@ -20,6 +20,12 @@ local M = {
 			show_flags = true,
 			path_display = "shortened",
 		},
+		search = {
+			enabled = true,
+			keybinding = "/",
+			prompt = "Search: ",
+			live_update = true,
+		},
 	},
 }
 
@@ -45,6 +51,7 @@ function M.setup_highlights()
 		BufferManagerModified = { link = "WarningMsg" },
 		BufferManagerIndicator = { link = "Type" },
 		BufferManagerPath = { link = "Comment" },
+		BufferManagerSearchPrompt = { link = "Question" },
 	}
 
 	for group, val in pairs(highlights) do
