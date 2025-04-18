@@ -89,7 +89,7 @@ require('buffer-manager').setup({
   fzf = {
     enabled = true,
     keybinding = "", -- Empty since we use <Space>gf globally
-    prompt = "Buffer Search> ",
+    prompt = "> ",
     preview = true,
     preview_window = "right:40%",
     window_width = 0.3,  -- Matches the main buffer manager window size

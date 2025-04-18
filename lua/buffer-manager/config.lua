@@ -34,7 +34,7 @@ M.options = {
 		preview = true,
 		preview_window = "right:50%",
 		window_width = 0.8,
-		window_height = 0.7,
+		Searchwindow_height = 0.7,
 	},
 }
 
