@@ -23,9 +23,11 @@ function M.setup(opts)
 		vim.keymap.set("n", config.options.mappings.horizontal, ui.open_horizontal, { noremap = true, silent = true })
 		vim.keymap.set("n", horizontal_key, ui.open_horizontal, { noremap = true, silent = true })
 
-		-- FZF search (<Space>gf)
-		vim.keymap.set("n", "<Space>gf", ui.fzf_search, { noremap = true, silent = true })
+		-- Buffer keybindings
 	end
+
+	-- Always set up FZF search (<Space>gf), regardless of default_mappings setting
+	vim.keymap.set("n", "<Space>gf", ui.fzf_search, { noremap = true, silent = true })
 end
 
 M.open = ui.open
