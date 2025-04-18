@@ -305,7 +305,8 @@ end
 local function set_options()
     api.nvim_buf_set_option(state.buffer, "bufhidden", "wipe")
     api.nvim_buf_set_option(state.buffer, "filetype", "bufferlist")
-    api.nvim_buf_set_name(state.buffer, "Buffer Manager")
+    -- Safe buffer naming: avoid E95 if name already set
+    pcall(api.nvim_buf_set_name, state.buffer, "Buffer Manager")
     
     if state.win_id and api.nvim_win_is_valid(state.win_id) then
         api.nvim_win_set_option(state.win_id, "cursorline", true)
