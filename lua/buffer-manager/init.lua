@@ -26,8 +26,8 @@ function M.setup(opts)
         vim.keymap.set("n", horizontal_key, ui.open_horizontal, { noremap = true, silent = true })
     end
 
-    -- Set up global search keybinding (Space+gf): use Telescope if available or fallback to FZF
-    vim.keymap.set("n", "<Space>gf", function()
+    -- Set up global search keybinding (Space+ll): use Telescope if available or fallback to FZF
+    vim.keymap.set("n", "<Space>ll", function()
         if pcall(require, "telescope.pickers") then
             require("buffer-manager.ui").enter_search_mode()
         else
