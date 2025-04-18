@@ -1,4 +1,8 @@
 -- Check if required dependencies are available
+local api = vim.api
+local fn = vim.fn
+local config = require("buffer-manager.config")
+
 local has_fzf, fzf = pcall(require, "fzf-lua")
 if not has_fzf then
     config.options.fzf.enabled = false
