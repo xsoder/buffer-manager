@@ -38,14 +38,14 @@ local M = {
 			keybinding = "gr",
 			prompt = "Ripgrep search: ",
 			args = {
-				"--vimgrep",
-				"--smart-case",
+				"vimgrep",
+				"smart-case",
 			},
 		},
 	},
 }
 
--- Apply user configuration
+ Apply user configuration
 function M.setup(opts)
 	opts = opts or {}
 	M.options = vim.tbl_deep_extend("force", M.options, opts)
@@ -55,7 +55,7 @@ function M.setup(opts)
 		vim.notify("buffer-manager.nvim: nvim-web-devicons not found, disabling icons", vim.log.levels.WARN)
 	end
 
-	-- Check for required dependencies
+	 Check for required dependencies
 	if M.options.fzf.enabled then
 		local has_fzf = pcall(require, "fzf-lua")
 		if not has_fzf then

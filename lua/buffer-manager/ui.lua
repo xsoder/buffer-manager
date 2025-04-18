@@ -79,26 +79,31 @@ local function format_buffer(bufnr)
 			and (api.nvim_buf_get_option(bufnr, "modified") and " [+]" or "")
 		or ""
 	local indicator = config.options.display.show_flags and (api.nvim_get_current_buf() == bufnr and " *" or "") or ""
+	
+	-- Get current line position for the buffer
+	local line_pos = ""
+	if api.nvim_get_current_buf() == bufnr then
+		local cursor_pos = api.nvim_win_get_cursor(0)
+		line_pos = string.format(" [%d]", cursor_pos[1])
+	end
 
-	return string.format("%s%s%s%s%s", bufnr_str, icon, path, modified, indicator)
+	return string.format("%s%s%s%s%s%s", bufnr_str, icon, path, modified, indicator, line_pos)
 end
 
--- Get a list of buffers to display
+local uv = vim.loop
 local function get_buffer_list()
 	local buffers = {}
 	for _, bufnr in ipairs(api.nvim_list_bufs()) do
 		if api.nvim_buf_is_valid(bufnr) and api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, 'buflisted') then
 			local name = api.nvim_buf_get_name(bufnr)
-			if name ~= '' then
+			if name ~= '' and uv.fs_stat(name) then
 				table.insert(buffers, bufnr)
 			end
 		end
 	end
-
 	return buffers
 end
 
--- Update the buffer list display
 local function update_buffer_list()
 	if not state.buffer or not api.nvim_buf_is_valid(state.buffer) then
 		return
