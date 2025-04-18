@@ -664,7 +664,47 @@ function M.show_help()
 		"",
 		" Search & Find:",
 		"   /                    : Enter search mode",
+		"   Space+gf             : Open FZF fuzzy finder (global keybinding)",
+		"",
+		" Other:",
+		"   ?                    : Show this help",
+		"   q/Esc                : Close buffer manager/help",
+		"",
+		" Press any key to close this help window",
 	}
 
-	table.insert(lines, "")
-	table.insert(lines
+	-- render help buffer
+	api.nvim_buf_set_lines(help_buffer, 0, -1, false, lines)
+	api.nvim_buf_set_option(help_buffer, "modifiable", false)
+
+	-- center window
+	local width = 50
+	local height = #lines
+	local row = math.floor((vim.o.lines - height) / 2)
+	local col = math.floor((vim.o.columns - width) / 2)
+
+	local opts = {
+		style = "minimal",
+		relative = "editor",
+		width = width,
+		height = height,
+		row = row,
+		col = col,
+		border = config.options.window.border,
+		title = " Help ",
+		title_pos = "center",
+	}
+
+	local help_win = api.nvim_open_win(help_buffer, true, opts)
+	api.nvim_win_set_option(help_win, "winblend", 0)
+
+	-- close on any key
+	local keys = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`-=[]\\;',./~!@#$%^&*()_+{}|:\\"<>?"
+	for i = 1, #keys do
+		local c = keys:sub(i, i)
+		api.nvim_buf_set_keymap(help_buffer, "n", c, "<cmd>close<CR>", { silent = true, noremap = true })
+	end
+	for _, k in ipairs({ "<Space>", "<CR>", "<Esc>", "<Tab>", "<BS>", "<Up>", "<Down>", "<Left>", "<Right>" }) do
+		api.nvim_buf_set_keymap(help_buffer, "n", k, "<cmd>close<CR>", { silent = true, noremap = true })
+	end
+end
