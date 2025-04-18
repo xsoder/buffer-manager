@@ -635,16 +635,11 @@ function M.fzf_search()
     end
 
     local source = {}
-    local previewer = {}
     for _, buf in ipairs(buffers) do
         if api.nvim_buf_is_valid(buf.bufnr) then
             local name = api.nvim_buf_get_name(buf.bufnr)
             if name ~= '' then
                 table.insert(source, buf.display)
-                previewer[buf.display] = function()
-                    local lines = api.nvim_buf_get_lines(buf.bufnr, 0, -1, false)
-                    return table.concat(lines, '\n')
-                end
             end
         end
     end
@@ -654,20 +649,13 @@ function M.fzf_search()
         fzf_opts = {
             ['--layout'] = 'reverse',
             ['--info'] = 'inline',
-            ['--preview-window'] = 'right:50%',
+            ['--no-preview'] = '',
         },
         winopts = {
             height = 0.8,
             width = 0.8,
             border = config.options.window.border,
-            preview = {
-                hidden = not config.options.fzf.preview,
-                layout = 'vertical',
-                title = 'File Preview',
-                delay = 100,
-            },
         },
-        previewer = previewer,
         actions = {
             ['default'] = function(selected)
                 if selected and #selected > 0 then
