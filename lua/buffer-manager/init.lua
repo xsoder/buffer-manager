@@ -27,11 +27,7 @@ function M.setup(opts)
 		-- FZF search (<Space>gf)
 		vim.keymap.set("n", "<Space>gf", ui.fzf_search, { noremap = true, silent = true })
 
-		-- Print confirmation message
-		vim.notify(
-			"Buffer Manager: Keybindings set up - " .. open_key .. " for regular UI, <Space>gf for FZF",
-			vim.log.levels.INFO
-		)
+		-- No notification needed
 	end
 end
 
