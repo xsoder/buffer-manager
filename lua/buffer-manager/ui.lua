@@ -353,38 +353,42 @@ function set_normal_keymaps()
 
 	-- Helper function for setting keymaps
 	local function map(mode, key, action)
-		api.nvim_buf_set_keymap(state.buffer, mode, key, action, { silent = true, noremap = true })
+		-- Use <cmd> instead of : to prevent showing commands in the status bar
+		api.nvim_buf_set_keymap(state.buffer, mode, key, action, { silent = true, noremap = true, nowait = true })
 	end
 
-	map("n", "j", ":lua require('buffer-manager.ui').next_buffer()<CR>")
-	map("n", "k", ":lua require('buffer-manager.ui').prev_buffer()<CR>")
-	map("n", "<Down>", ":lua require('buffer-manager.ui').next_buffer()<CR>")
-	map("n", "<Up>", ":lua require('buffer-manager.ui').prev_buffer()<CR>")
+	map("n", "j", "<cmd>lua require('buffer-manager.ui').next_buffer()<CR>")
+	map("n", "k", "<cmd>lua require('buffer-manager.ui').prev_buffer()<CR>")
+	map("n", "<Down>", "<cmd>lua require('buffer-manager.ui').next_buffer()<CR>")
+	map("n", "<Up>", "<cmd>lua require('buffer-manager.ui').prev_buffer()<CR>")
 
-	map("n", "<CR>", ":lua require('buffer-manager.ui').select_buffer()<CR>")
-	map("n", "<2-LeftMouse>", ":lua require('buffer-manager.ui').select_buffer()<CR>")
+	map("n", "<CR>", "<cmd>lua require('buffer-manager.ui').select_buffer()<CR>")
+	map("n", "<2-LeftMouse>", "<cmd>lua require('buffer-manager.ui').select_buffer()<CR>")
 
-	map("n", "d", ":lua require('buffer-manager.ui').delete_buffer()<CR>")
-	map("n", "D", ":lua require('buffer-manager.ui').delete_buffer()<CR>")
-	map("n", "q", ":lua require('buffer-manager.ui').close()<CR>")
-	map("n", "<Esc>", ":lua require('buffer-manager.ui').close()<CR>")
+	map("n", "d", "<cmd>lua require('buffer-manager.ui').delete_buffer()<CR>")
+	map("n", "D", "<cmd>lua require('buffer-manager.ui').delete_buffer()<CR>")
+	map("n", "q", "<cmd>lua require('buffer-manager.ui').close()<CR>")
+	map("n", "<Esc>", "<cmd>lua require('buffer-manager.ui').close()<CR>")
 
-	map("n", "v", ":lua require('buffer-manager.ui').select_buffer('vertical')<CR>")
-	map("n", "s", ":lua require('buffer-manager.ui').select_buffer('horizontal')<CR>")
+	map("n", "v", "<cmd>lua require('buffer-manager.ui').select_buffer('vertical')<CR>")
+	map("n", "s", "<cmd>lua require('buffer-manager.ui').select_buffer('horizontal')<CR>")
+	
+	-- Add help keybinding
+	map("n", "?", "<cmd>lua require('buffer-manager.ui').show_help()<CR>")
 
 	-- Add search mappings
 	if config.options.search.enabled then
-		map("n", config.options.search.keybinding, ":lua require('buffer-manager.ui').enter_search_mode()<CR>")
+		map("n", config.options.search.keybinding, "<cmd>lua require('buffer-manager.ui').enter_search_mode()<CR>")
 	end
 
 	-- Add ripgrep mapping
 	if config.options.ripgrep.enabled then
-		map("n", config.options.ripgrep.keybinding, ":lua require('buffer-manager.ui').ripgrep_search()<CR>")
+		map("n", config.options.ripgrep.keybinding, "<cmd>lua require('buffer-manager.ui').ripgrep_search()<CR>")
 	end
 
 	-- Add fzf mapping
 	if config.options.fzf.enabled then
-		map("n", config.options.fzf.keybinding, ":lua require('buffer-manager.ui').fzf_search()<CR>")
+		map("n", config.options.fzf.keybinding, "<cmd>lua require('buffer-manager.ui').fzf_search()<CR>")
 	end
 end
 
@@ -734,6 +738,91 @@ function M.fzf_search()
 			end,
 		},
 	})
+end
+
+-- Show help with all available keybindings
+function M.show_help()
+	local help_buffer = api.nvim_create_buf(false, true)
+	api.nvim_buf_set_option(help_buffer, "bufhidden", "wipe")
+
+	-- Create help content
+	local lines = {
+		" Buffer Manager - Available Keybindings ",
+		"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+		"",
+		" Navigation:",
+		"   j/k or ↓/↑       : Navigate through buffers",
+		"",
+		" Buffer Actions:",
+		"   Enter or double-click : Select buffer",
+		"   d/D                  : Delete buffer",
+		"   v                    : Open in vertical split",
+		"   s                    : Open in horizontal split",
+		"",
+		" Search & Find:",
+		"   /                    : Enter search mode",
+	}
+
+	-- Add conditional keybindings based on configuration
+	if config.options.fzf.enabled then
+		table.insert(lines, "   " .. config.options.fzf.keybinding .. "                    : Open FZF fuzzy finder")
+	end
+
+	if config.options.ripgrep.enabled then
+		table.insert(lines, "   " .. config.options.ripgrep.keybinding .. "                    : Search with ripgrep")
+	end
+
+	table.insert(lines, "")
+	table.insert(lines, " Other:") 
+	table.insert(lines, "   ?                    : Show this help")
+	table.insert(lines, "   q/Esc                : Close buffer manager/help")
+	table.insert(lines, "")
+	table.insert(lines, " Press any key to close this help window")
+
+	-- Set buffer content
+	api.nvim_buf_set_lines(help_buffer, 0, -1, false, lines)
+	api.nvim_buf_set_option(help_buffer, "modifiable", false)
+
+	-- Calculate window dimensions
+	local width = 50
+	local height = #lines
+	local row = math.floor((vim.o.lines - height) / 2)
+	local col = math.floor((vim.o.columns - width) / 2)
+
+	-- Window options
+	local opts = {
+		style = "minimal",
+		relative = "editor",
+		width = width,
+		height = height,
+		row = row,
+		col = col,
+		border = config.options.window.border,
+		title = " Help ",
+		title_pos = "center",
+	}
+
+	-- Create floating window
+	local help_win = api.nvim_open_win(help_buffer, true, opts)
+
+	-- Set window options
+	api.nvim_win_set_option(help_win, "winblend", 0)
+	api.nvim_win_set_option(help_win, "cursorline", false)
+
+	-- Set buffer filetype for potential highlighting
+	api.nvim_buf_set_option(help_buffer, "filetype", "help")
+
+	-- Add keymapping to close on any key
+	local keys = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?"
+	for i = 1, #keys do
+		local c = keys:sub(i, i)
+		api.nvim_buf_set_keymap(help_buffer, "n", c, "<cmd>close<CR>", { silent = true, noremap = true })
+	end
+
+	-- Add special keys
+	for _, key in ipairs({ "<Space>", "<CR>", "<Esc>", "<Tab>", "<BS>", "<Up>", "<Down>", "<Left>", "<Right>" }) do
+		api.nvim_buf_set_keymap(help_buffer, "n", key, "<cmd>close<CR>", { silent = true, noremap = true })
+	end
 end
 
 return M
