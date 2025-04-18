@@ -1,7 +1,7 @@
 local M = {}
 
 M.options = {
-	icons = true,
+	icons = false,
 	use_devicons = true,
 	default_mappings = true,
 	mappings = {
@@ -12,14 +12,14 @@ M.options = {
 	window = {
 		width_ratio = 0.3,
 		height_ratio = 0.3,
-		border = "rounded",
-		position = "center", -- Options: "center", "left", "right", "top", "bottom"
+		border = "single",
+		position = "center", -- "center", "top", "bottom", "left", "right"
 	},
 	display = {
 		show_numbers = true,
 		show_modified = true,
 		show_flags = true,
-		path_display = "shortened", -- Options: "filename", "relative", "absolute", "shortened"
+		path_display = "filename", -- "filename", "relative", "absolute", "shortened"
 	},
 	search = {
 		enabled = true,
@@ -29,13 +29,12 @@ M.options = {
 	},
 	fzf = {
 		enabled = true,
-		keybinding = "", -- Empty since we use <Space>gf globally
-		prompt = "> ",
+		keybinding = "gf",
+		prompt = "Buffer Search> ",
 		preview = true,
 		preview_window = "right:50%",
-		window_width = 0.9,
-		window_height = 0.8,
-		border = "rounded",
+		window_width = 0.8,
+		window_height = 0.7,
 	},
 }
 
