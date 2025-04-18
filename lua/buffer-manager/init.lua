@@ -5,15 +5,23 @@ local ui = require("buffer-manager.ui")
 
 function M.setup(opts)
 	config.setup(opts)
-	vim.api.nvim_create_user_command("BufferManager", function()
-		ui.fzf_search()
-	end, {})
+
+	local function open_fzf()
+		if config.options.fzf.enabled then
+			ui.fzf_search()
+		else
+			ui.open()
+		end
+	end
+
+	vim.api.nvim_create_user_command("BufferManager", open_fzf, {})
 
 	if config.options.default_mappings then
-		vim.keymap.set("n", config.options.mappings.open, ui.fzf_search, { noremap = true, silent = true })
+		vim.keymap.set("n", config.options.mappings.open, open_fzf, { noremap = true, silent = true })
 		vim.keymap.set("n", config.options.mappings.vertical, ui.open_vertical, { noremap = true, silent = true })
 		vim.keymap.set("n", config.options.mappings.horizontal, ui.open_horizontal, { noremap = true, silent = true })
 	end
+
 	return M
 end
 
