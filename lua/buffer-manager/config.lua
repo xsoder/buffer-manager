@@ -10,8 +10,8 @@ M.options = {
 		horizontal = "<leader>bs",
 	},
 	window = {
-		width_ratio = 0.03,
-		height_ratio = 0.03,
+		width_ratio = 0.3,
+		height_ratio = 0.3,
 		border = "rounded",
 		position = "center",
 	},
@@ -19,7 +19,7 @@ M.options = {
 		show_numbers = true,
 		show_modified = true,
 		show_flags = true,
-		path_display = "filename",
+		path_display = "shortened",
 	},
 	search = {
 		enabled = true,
@@ -32,7 +32,7 @@ M.options = {
 		keybinding = "gf",
 		prompt = "Buffer Search> ",
 		preview = true,
-		preview_window = "right:30%",
+		preview_window = "right:50%",
 	},
 	ripgrep = {
 		enabled = true,

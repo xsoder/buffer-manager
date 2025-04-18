@@ -81,7 +81,7 @@ require('buffer-manager').setup({
     keybinding = "gf",
     prompt = "Buffer Search> ",
     preview = true,
-    preview_window = "right:50%",
+    preview_window = "right:40%",
   },
   ripgrep = {
     enabled = true,
