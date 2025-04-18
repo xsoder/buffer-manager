@@ -26,19 +26,24 @@ function M.setup(opts)
         vim.keymap.set("n", horizontal_key, ui.open_horizontal, { noremap = true, silent = true })
     end
 
-    -- Set up global search keybinding (Space+ll): use Telescope if available or fallback to FZF
-    vim.keymap.set("n", "<Space>ll", function()
+    -- Map both <Space>ll and <leader>ll to buffer search
+    local function bm_search()
+        local ui_mod = require("buffer-manager.ui")
         if pcall(require, "telescope.pickers") then
-            require("buffer-manager.ui").enter_search_mode()
+            -- Open buffer manager UI then enter search mode
+            ui_mod.open()
+            ui_mod.enter_search_mode()
         else
             local has_fzf, _ = pcall(require, "fzf-lua")
             if not has_fzf then
                 vim.notify("buffer-manager.nvim: fzf-lua not found. Install it to enable FZF search.", vim.log.levels.WARN)
                 return
             end
-            require("buffer-manager.ui").fzf_search()
+            ui_mod.fzf_search()
         end
-    end, { noremap = true, silent = true, desc = "Buffer Manager: Search Buffers" })
+    end
+    vim.keymap.set("n", "<Space>ll", bm_search, { noremap = true, silent = true, desc = "Buffer Manager: Search Buffers" })
+    vim.keymap.set("n", "<leader>ll", bm_search, { noremap = true, silent = true, desc = "Buffer Manager: Search Buffers" })
 end
 
 M.open = ui.open
