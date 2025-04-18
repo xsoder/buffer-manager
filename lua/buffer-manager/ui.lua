@@ -24,14 +24,6 @@ if has_telescope then
     action_state = require("telescope.actions.state")
 end
 
--- Import nui components if available
--- local NuiPopup = has_nui and require("nui.popup") or nil
--- local NuiMenu = has_nui and require("nui.menu") or nil
--- local NuiInput = has_nui and require("nui.input") or nil
--- local NuiText = has_nui and require("nui.text") or nil
--- local NuiLine = has_nui and require("nui.line") or nil
--- local NuiEvent = has_nui and require("nui.utils.autocmd").event or nil
-
 local M = {}
 
 -- UI state
@@ -247,10 +239,21 @@ local function create_window()
             previewer = previewers.buffer_previewer,
             attach_mappings = function(prompt_bufnr, map)
                 actions.select_default:replace(function(_prompt_bufnr)
-                    local selection = action_state.get_selected_entry()
+                    local entry = action_state.get_selected_entry()
                     actions.close(_prompt_bufnr)
-                    if selection then
-                        M.select_buffer()
+                    if entry and entry.value then
+                        local bufnr = entry.value
+                        -- close native UI window if open
+                        if state.win_id and api.nvim_win_is_valid(state.win_id) then
+                            M.close()
+                        end
+                        -- open buffer in requested split
+                        if state.split_type == "vertical" then
+                            vim.cmd("vsplit")
+                        elseif state.split_type == "horizontal" then
+                            vim.cmd("split")
+                        end
+                        vim.api.nvim_set_current_buf(bufnr)
                     end
                 end)
                 return true
@@ -568,19 +571,29 @@ end
 -- Open the buffer manager window
 function M.open()
     if state.win_id and api.nvim_win_is_valid(state.win_id) then
-        -- Focus existing window
+        -- Focus existing native window
         api.nvim_set_current_win(state.win_id)
         update_buffer_list()
         return
     end
 
+    -- Create a fresh buffer for picker or UI
     state.buffer = api.nvim_create_buf(false, true)
+    -- Build buffer list for Telescope or native UI
+    state.buffers = get_buffer_list()
+    -- Telescope UI: launch picker and exit
+    if has_telescope then
+        create_window()
+        return
+    end
+
+    -- Native UI: create floating window
     state.win_id = create_window()
     set_options()
     set_normal_keymaps()
     update_buffer_list()
-
-    if state.win_id and api.nvim_win_is_valid(state.win_id) then
+    -- Highlight border
+    if api.nvim_win_is_valid(state.win_id) then
         api.nvim_win_set_option(state.win_id, "winhighlight", "Normal:BufferManagerNormal,FloatBorder:BufferManagerBorder")
     end
 end
@@ -624,7 +637,6 @@ function M.close()
     end
 end
 
--- Move to next buffer in the list
 function M.next_buffer()
     if state.search_mode or #state.buffers == 0 then
         return
@@ -655,7 +667,6 @@ function M.select_buffer(split_type)
         return
     end
 
-    -- only close native UI; telescope picker closed via attach_mappings
     if not has_telescope then
         M.close()
     end
