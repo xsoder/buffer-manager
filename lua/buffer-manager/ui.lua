@@ -708,3 +708,5 @@ function M.show_help()
 		api.nvim_buf_set_keymap(help_buffer, "n", k, "<cmd>close<CR>", { silent = true, noremap = true })
 	end
 end
+
+return M
