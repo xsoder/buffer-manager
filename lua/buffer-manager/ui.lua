@@ -527,6 +527,11 @@ function M.fzf_search()
       {
         prompt = "Buffers❯ ",
         previewer = false,
+        winopts = {
+          height = 0.3,
+          width = 0.5,
+          row = 0.35,
+        },
         actions = {
           ["default"] = function(selected)
             if selected and selected[1] then
