@@ -144,7 +144,6 @@ require('buffer-manager').delete_buffer()
 - [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) (optional): For file icons
 - [fzf-lua](https://github.com/ibhagwan/fzf-lua) (optional): For fuzzy finding functionality
 
-
 ## License
 
 MIT
