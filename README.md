@@ -25,6 +25,11 @@ A Neovim plugin that provides buffer management with a clean, interactive UI.
 ```lua
 use {
   'xsoder/buffer-manager',
+  requires = {
+    'MunifTanjim/nui.nvim',
+    'nvim-tree/nvim-web-devicons', -- optional
+    'ibhagwan/fzf-lua', -- optional
+  },
   config = function()
     require('buffer-manager').setup()
   end
@@ -36,6 +41,11 @@ use {
 ```lua
 return {
   'xsoder/buffer-manager',
+  dependencies = {
+    'MunifTanjim/nui.nvim',
+    'nvim-tree/nvim-web-devicons', -- optional
+    'ibhagwan/fzf-lua', -- optional
+  },
   config = function()
     require('buffer-manager').setup()
   end
@@ -143,6 +153,7 @@ require('buffer-manager').delete_buffer()
 
 - [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) (optional): For file icons
 - [fzf-lua](https://github.com/ibhagwan/fzf-lua) (optional): For fuzzy finding functionality
+- [nui.nvim](https://github.com/MunifTanjim/nui.nvim): For enhanced UI components
 
 ## License
 

@@ -3,7 +3,7 @@ local fn = vim.fn
 local config = require("buffer-manager.config")
 local Job = require("plenary.job")
 
--- Check if fzf-lua is available
+-- Check if required dependencies are available
 local has_fzf, fzf = pcall(require, "fzf-lua")
 if not has_fzf then
 	config.options.fzf.enabled = false
@@ -12,6 +12,22 @@ if not has_fzf then
 		vim.log.levels.INFO
 	)
 end
+
+-- Check if nui.nvim is available
+local has_nui, nui = pcall(require, "nui")
+if not has_nui then
+	vim.notify(
+		"buffer-manager.nvim: nui.nvim not found. Install it with your package manager for enhanced UI features.",
+		vim.log.levels.WARN
+	)
+end
+
+-- Import nui components if available
+local NuiPopup = has_nui and require("nui.popup") or nil
+local NuiMenu = has_nui and require("nui.menu") or nil
+local NuiInput = has_nui and require("nui.input") or nil
+local NuiText = has_nui and require("nui.text") or nil
+local NuiLine = has_nui and require("nui.line") or nil
 
 local M = {}
 
@@ -173,33 +189,91 @@ local function create_window()
 		col = math.floor((vim.o.columns - width) / 2)
 	elseif position == "left" then
 		row = math.floor((vim.o.lines - height) / 2)
-		col = 0
+		col = 1
 	elseif position == "right" then
 		row = math.floor((vim.o.lines - height) / 2)
-		col = vim.o.columns - width
+		col = vim.o.columns - width - 1
 	elseif position == "top" then
-		row = 0
+		row = 1
 		col = math.floor((vim.o.columns - width) / 2)
 	elseif position == "bottom" then
-		row = vim.o.lines - height - 2
+		row = vim.o.lines - height - 1
+		col = math.floor((vim.o.columns - width) / 2)
+	else
+		-- Default to center
+		row = math.floor((vim.o.lines - height) / 2)
 		col = math.floor((vim.o.columns - width) / 2)
 	end
 
-	-- Window options
-	local opts = {
-		style = "minimal",
-		relative = "editor",
-		width = width,
-		height = height,
-		row = row,
-		col = col,
-		border = win_config.border,
-		title = " Buffer Manager ",
-		title_pos = "center",
-	}
+	-- Create buffer if it doesn't exist
+	if not state.buffer or not api.nvim_buf_is_valid(state.buffer) then
+		state.buffer = api.nvim_create_buf(false, true)
+		set_options()
+		set_normal_keymaps()
+	end
 
-	-- Create floating window
-	return api.nvim_open_win(state.buffer, true, opts)
+	-- Use nui.nvim if available, otherwise fall back to native API
+	if has_nui and NuiPopup then
+		-- Create a popup with nui.nvim
+		local popup = NuiPopup({
+			enter = true,
+			focusable = true,
+			border = {
+				style = win_config.border,
+				text = {
+					top = NuiText(" Buffer Manager ", "BufferManagerTitle"),
+					top_align = "center",
+				},
+			},
+			buf = state.buffer,
+			position = {
+				row = row,
+				col = col,
+			},
+			size = {
+				width = width,
+				height = height,
+			},
+			zindex = 50,
+			relative = "editor",
+			win_options = {
+				winblend = 0,
+				winhighlight = "Normal:BufferManagerNormal,FloatBorder:BufferManagerBorder",
+			},
+		})
+
+		-- Mount the popup
+		popup:mount()
+
+		-- Store the window ID
+		state.win_id = popup.winid
+		state.popup = popup
+
+		-- Set up autocmd to close popup when leaving the window
+		popup:on("BufLeave", function()
+			if api.nvim_buf_is_valid(state.buffer) then
+				M.close()
+			end
+		 end, { once = true })
+
+		return state.win_id
+	else
+		-- Window options for native API
+		local opts = {
+			style = "minimal",
+			relative = "editor",
+			width = width,
+			height = height,
+			row = row,
+			col = col,
+			border = win_config.border,
+			title = " Buffer Manager ",
+			title_pos = "center",
+		}
+
+		-- Create floating window with native API
+		return api.nvim_open_win(state.buffer, true, opts)
+	end
 end
 
 function M.enter_search_mode()
@@ -207,31 +281,113 @@ function M.enter_search_mode()
 		return
 	end
 
-	state.search_mode = true
-	state.search_query = ""
-	state.original_buffers = vim.deepcopy(state.buffers)
+	-- Use nui.nvim Input component if available
+	if has_nui and NuiInput then
+		-- Create an input popup at the bottom of the buffer manager window
+		local input = NuiInput({
+			position = {
+				row = api.nvim_win_get_height(state.win_id),
+				col = 0,
+			},
+			size = {
+				width = api.nvim_win_get_width(state.win_id),
+				height = 1,
+			},
+			relative = "win",
+			win = state.win_id,
+			border = {
+				style = "rounded",
+				text = {
+					top = NuiText(" Search ", "BufferManagerSearchPrompt"),
+					top_align = "left",
+				},
+			},
+			prompt = NuiText(config.options.search.prompt, "BufferManagerSearchPrompt"),
+			on_submit = function(value)
+				state.search_query = value
+				M.apply_search()
+			end,
+			on_change = function(value)
+				if config.options.search.live_update then
+					state.search_query = value
+					M.filter_buffers()
+				end
+			end,
+			on_close = function()
+				M.exit_search_mode()
+			end,
+		})
 
-	local function map(mode, key, action)
-		api.nvim_buf_set_keymap(state.buffer, mode, key, action, { silent = true, noremap = true })
+		-- Mount the input popup
+		input:mount()
+
+		-- Store the input component
+		state.search_input = input
+		state.search_mode = true
+		state.search_query = ""
+		state.original_buffers = vim.deepcopy(state.buffers)
+		return
+	else
+		-- Fallback to traditional search mode
+		state.search_mode = true
+		state.search_query = ""
+		state.original_buffers = vim.deepcopy(state.buffers)
+
+		-- Set up search mode keymaps
+		api.nvim_buf_set_keymap(
+			state.buffer,
+			"n",
+			"<Esc>",
+			":lua require('buffer-manager.ui').exit_search_mode()<CR>",
+			{ noremap = true, silent = true }
+		)
+
+		api.nvim_buf_set_keymap(
+			state.buffer,
+			"n",
+			"<CR>",
+			":lua require('buffer-manager.ui').apply_search()<CR>",
+			{ noremap = true, silent = true }
+		)
+
+		-- Set up autocmd to capture keystrokes
+		local group = api.nvim_create_augroup("BufferManagerSearch", { clear = true })
+		api.nvim_create_autocmd("InsertCharPre", {
+			group = group,
+			buffer = state.buffer,
+			callback = function()
+				local char = vim.v.char
+				vim.schedule(function()
+					M.add_to_search(char)
+				end)
+				vim.v.char = ""
+			end,
+		})
 	end
+	if not has_nui or not NuiInput then
+		-- Only set these keymaps if we're not using nui.nvim
+		local function map(mode, key, action)
+			api.nvim_buf_set_keymap(state.buffer, mode, key, action, { silent = true, noremap = true })
+		end
 
-	for _, key in ipairs({ "j", "k", "<Down>", "<Up>", "<CR>", "<2-LeftMouse>", "d", "D", "q", "<Esc>", "v", "s", "/" }) do
-		pcall(function()
-			api.nvim_buf_del_keymap(state.buffer, "n", key)
-		end)
+		for _, key in ipairs({ "j", "k", "<Down>", "<Up>", "<CR>", "<2-LeftMouse>", "d", "D", "q", "<Esc>", "v", "s", "/" }) do
+			pcall(function()
+				api.nvim_buf_del_keymap(state.buffer, "n", key)
+			end)
+		end
+
+		map("n", "<CR>", ":lua require('buffer-manager.ui').apply_search()<CR>")
+		map("n", "<Esc>", ":lua require('buffer-manager.ui').exit_search_mode()<CR>")
+
+		local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./\\:"
+		for i = 1, #chars do
+			local c = chars:sub(i, i)
+			map("n", c, string.format(':lua require("buffer-manager.ui").add_to_search("%s")<CR>', c))
+		end
+
+		map("n", "<BS>", ':lua require("buffer-manager.ui").remove_from_search()<CR>')
+		map("n", "<Space>", ':lua require("buffer-manager.ui").add_to_search(" ")<CR>')
 	end
-
-	map("n", "<CR>", ":lua require('buffer-manager.ui').apply_search()<CR>")
-	map("n", "<Esc>", ":lua require('buffer-manager.ui').exit_search_mode()<CR>")
-
-	local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./\\:"
-	for i = 1, #chars do
-		local c = chars:sub(i, i)
-		map("n", c, string.format(':lua require("buffer-manager.ui").add_to_search("%s")<CR>', c))
-	end
-
-	map("n", "<BS>", ':lua require("buffer-manager.ui").remove_from_search()<CR>')
-	map("n", "<Space>", ':lua require("buffer-manager.ui").add_to_search(" ")<CR>')
 
 	update_buffer_list()
 end
@@ -278,6 +434,12 @@ function M.exit_search_mode()
 		return
 	end
 
+	-- Close nui.nvim input if it exists
+	if state.search_input and has_nui then
+		state.search_input:unmount()
+		state.search_input = nil
+	end
+
 	state.search_mode = false
 	state.search_query = ""
 	state.buffers = state.original_buffers
@@ -285,6 +447,11 @@ function M.exit_search_mode()
 
 	-- Restore normal keymaps
 	set_normal_keymaps()
+
+	-- Clear autocmds
+	pcall(function()
+		api.nvim_clear_autocmds({ group = "BufferManagerSearch" })
+	end)
 
 	update_buffer_list()
 end
