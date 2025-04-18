@@ -353,42 +353,41 @@ function set_normal_keymaps()
 
 	-- Helper function for setting keymaps
 	local function map(mode, key, action)
-		-- Use <cmd> instead of : to prevent showing commands in the status bar
-		api.nvim_buf_set_keymap(state.buffer, mode, key, action, { silent = true, noremap = true, nowait = true })
+		api.nvim_buf_set_keymap(state.buffer, mode, key, action, { silent = true, noremap = true })
 	end
 
-	map("n", "j", "<cmd>lua require('buffer-manager.ui').next_buffer()<CR>")
-	map("n", "k", "<cmd>lua require('buffer-manager.ui').prev_buffer()<CR>")
-	map("n", "<Down>", "<cmd>lua require('buffer-manager.ui').next_buffer()<CR>")
-	map("n", "<Up>", "<cmd>lua require('buffer-manager.ui').prev_buffer()<CR>")
+	map("n", "j", ":lua require('buffer-manager.ui').next_buffer()<CR>")
+	map("n", "k", ":lua require('buffer-manager.ui').prev_buffer()<CR>")
+	map("n", "<Down>", ":lua require('buffer-manager.ui').next_buffer()<CR>")
+	map("n", "<Up>", ":lua require('buffer-manager.ui').prev_buffer()<CR>")
 
-	map("n", "<CR>", "<cmd>lua require('buffer-manager.ui').select_buffer()<CR>")
-	map("n", "<2-LeftMouse>", "<cmd>lua require('buffer-manager.ui').select_buffer()<CR>")
+	map("n", "<CR>", ":lua require('buffer-manager.ui').select_buffer()<CR>")
+	map("n", "<2-LeftMouse>", ":lua require('buffer-manager.ui').select_buffer()<CR>")
 
-	map("n", "d", "<cmd>lua require('buffer-manager.ui').delete_buffer()<CR>")
-	map("n", "D", "<cmd>lua require('buffer-manager.ui').delete_buffer()<CR>")
-	map("n", "q", "<cmd>lua require('buffer-manager.ui').close()<CR>")
-	map("n", "<Esc>", "<cmd>lua require('buffer-manager.ui').close()<CR>")
+	map("n", "d", ":lua require('buffer-manager.ui').delete_buffer()<CR>")
+	map("n", "D", ":lua require('buffer-manager.ui').delete_buffer()<CR>")
+	map("n", "q", ":lua require('buffer-manager.ui').close()<CR>")
+	map("n", "<Esc>", ":lua require('buffer-manager.ui').close()<CR>")
 
-	map("n", "v", "<cmd>lua require('buffer-manager.ui').select_buffer('vertical')<CR>")
-	map("n", "s", "<cmd>lua require('buffer-manager.ui').select_buffer('horizontal')<CR>")
+	map("n", "v", ":lua require('buffer-manager.ui').select_buffer('vertical')<CR>")
+	map("n", "s", ":lua require('buffer-manager.ui').select_buffer('horizontal')<CR>")
 	
 	-- Add help keybinding
-	map("n", "?", "<cmd>lua require('buffer-manager.ui').show_help()<CR>")
+	map("n", "?", ":lua require('buffer-manager.ui').show_help()<CR>")
 
 	-- Add search mappings
 	if config.options.search.enabled then
-		map("n", config.options.search.keybinding, "<cmd>lua require('buffer-manager.ui').enter_search_mode()<CR>")
+		map("n", config.options.search.keybinding, ":lua require('buffer-manager.ui').enter_search_mode()<CR>")
 	end
 
 	-- Add ripgrep mapping
 	if config.options.ripgrep.enabled then
-		map("n", config.options.ripgrep.keybinding, "<cmd>lua require('buffer-manager.ui').ripgrep_search()<CR>")
+		map("n", config.options.ripgrep.keybinding, ":lua require('buffer-manager.ui').ripgrep_search()<CR>")
 	end
 
 	-- Add fzf mapping
 	if config.options.fzf.enabled then
-		map("n", config.options.fzf.keybinding, "<cmd>lua require('buffer-manager.ui').fzf_search()<CR>")
+		map("n", config.options.fzf.keybinding, ":lua require('buffer-manager.ui').fzf_search()<CR>")
 	end
 end
 
