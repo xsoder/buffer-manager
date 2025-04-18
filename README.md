@@ -11,6 +11,8 @@ A Neovim plugin that provides buffer management with a clean, interactive UI.
 - Support for buffer operations (select, delete, split)
 - Customizable display options
 - Integration with nvim-web-devicons for file icons
+- Fuzzy finding with FZF integration
+- Full-text search with ripgrep integration
 
 ## Installation
 
@@ -74,6 +76,22 @@ require('buffer-manager').setup({
     show_flags = true,
     path_display = "shortened",
   },
+  fzf = {
+    enabled = true,
+    keybinding = "gf",
+    prompt = "Buffer Search> ",
+    preview = true,
+    preview_window = "right:50%",
+  },
+  ripgrep = {
+    enabled = true,
+    keybinding = "gr",
+    prompt = "Ripgrep search: ",
+    args = {
+      "--vimgrep",
+      "--smart-case",
+    },
+  },
 })
 ```
 
@@ -98,6 +116,8 @@ require('buffer-manager').setup({
 - `/`: enter search mode
 - Type to filter the buffer list in real-time
 - Press `<Enter>` to apply the search filter or `<Esc>` to cancel
+- `gf`: Open FZF fuzzy finder for buffers (customizable)
+- `gr`: Search buffer contents with ripgrep (customizable)
 
 ### Commands
 
@@ -119,6 +139,9 @@ require('buffer-manager').delete_buffer()
 ## Dependencies
 
 - [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) (optional): For file icons
+- [fzf-lua](https://github.com/ibhagwan/fzf-lua) (optional): For fuzzy finding functionality
+- [ripgrep](https://github.com/BurntSushi/ripgrep) (optional): For full-text search functionality
+- [plenary.nvim](https://github.com/nvim-lua/plenary.nvim): Required for ripgrep integration
 
 ## License
 

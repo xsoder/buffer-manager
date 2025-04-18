@@ -6,19 +6,17 @@ local ui = require("buffer-manager.ui")
 function M.setup(opts)
 	config.setup(opts)
 	vim.api.nvim_create_user_command("BufferManager", function()
-		ui.open()
+		ui.fzf_search()
 	end, {})
 
 	if config.options.default_mappings then
-		-- Space bb for buffer management (like Doom Emacs)
-		vim.keymap.set("n", config.options.mappings.open, ui.open, { noremap = true, silent = true })
+		vim.keymap.set("n", config.options.mappings.open, ui.fzf_search, { noremap = true, silent = true })
 		vim.keymap.set("n", config.options.mappings.vertical, ui.open_vertical, { noremap = true, silent = true })
 		vim.keymap.set("n", config.options.mappings.horizontal, ui.open_horizontal, { noremap = true, silent = true })
 	end
 	return M
 end
 
--- Expose all UI functions
 M.open = ui.open
 M.open_vertical = ui.open_vertical
 M.open_horizontal = ui.open_horizontal
@@ -33,5 +31,7 @@ M.add_to_search = ui.add_to_search
 M.remove_from_search = ui.remove_from_search
 M.apply_search = ui.apply_search
 M.filter_buffers = ui.filter_buffers
+M.fzf_search = ui.fzf_search
+M.ripgrep_search = ui.ripgrep_search
 
 return M
