@@ -98,8 +98,11 @@ local function get_buffer_list()
 			and api.nvim_buf_get_option(bufnr, "buflisted")
 		then
 			local name = api.nvim_buf_get_name(bufnr)
-			if name ~= "" and uv.fs_stat(name) then
-				table.insert(buffers, bufnr)
+			if name ~= "" then
+				vim.notify(string.format("Checking buffer: %s (exists: %s)", name, vim.fn.filereadable(name)), vim.log.levels.DEBUG)
+				if vim.fn.filereadable(name) == 1 then
+					table.insert(buffers, bufnr)
+				end
 			end
 		end
 	end
@@ -508,12 +511,15 @@ function M.fzf_search()
 	for _, bufnr in ipairs(api.nvim_list_bufs()) do
 		if api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, "buflisted") then
 			local name = api.nvim_buf_get_name(bufnr)
-			if name ~= "" and vim.fn.filereadable(name) == 1 then
-				table.insert(buffers, {
-					bufnr = bufnr,
-					name = name,
-					display = string.format("%s (%s)", fn.fnamemodify(name, ":t"), bufnr)
-				})
+			if name ~= "" then
+				vim.notify(string.format("Checking buffer: %s (exists: %s)", name, vim.fn.filereadable(name)), vim.log.levels.DEBUG)
+				if vim.fn.filereadable(name) == 1 then
+					table.insert(buffers, {
+						bufnr = bufnr,
+						name = name,
+						display = string.format("%s (%s)", fn.fnamemodify(name, ":t"), bufnr)
+					})
+				end
 			end
 		end
 	end
