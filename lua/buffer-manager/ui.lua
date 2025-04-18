@@ -329,8 +329,11 @@ end
 -- Set buffer-local keymaps
 local function set_keymaps()
 	-- Clear all existing keymaps
-	api.nvim_buf_set_keymap(state.buffer, "n", "", "", { silent = true, noremap = true })
-
+	api.nvim_buf_set_keymap(state.buffer, "n", "<Key>", "", { noremap = true })
+	pcall(function()
+		api.nvim_buf_clear_namespace(state.buffer, 0, 0, -1)
+	end)
+	
 	-- Helper function for setting keymaps
 	local function map(mode, key, action)
 		api.nvim_buf_set_keymap(state.buffer, mode, key, action, { silent = true, noremap = true })
@@ -351,13 +354,12 @@ local function set_keymaps()
 
 	map("n", "v", ":lua require('buffer-manager.ui').select_buffer('vertical')<CR>")
 	map("n", "s", ":lua require('buffer-manager.ui').select_buffer('horizontal')<CR>")
-
+	
 	-- Add search mapping
 	if config.options.search.enabled then
 		map("n", config.options.search.keybinding, ":lua require('buffer-manager.ui').enter_search_mode()<CR>")
 	end
 end
-
 local function set_options()
 	api.nvim_buf_set_option(state.buffer, "bufhidden", "wipe")
 	api.nvim_buf_set_option(state.buffer, "filetype", "bufferlist")
