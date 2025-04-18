@@ -86,13 +86,10 @@ end
 -- Get a list of buffers to display
 local function get_buffer_list()
 	local buffers = {}
-	local current_bufnr = api.nvim_get_current_buf()
-
 	for _, bufnr in ipairs(api.nvim_list_bufs()) do
-		if api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, "buflisted") then
-			if bufnr == current_bufnr then
-				table.insert(buffers, 1, bufnr) -- Current buffer first
-			else
+		if api.nvim_buf_is_valid(bufnr) and api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, 'buflisted') then
+			local name = api.nvim_buf_get_name(bufnr)
+			if name ~= '' then
 				table.insert(buffers, bufnr)
 			end
 		end
@@ -590,26 +587,48 @@ function M.fzf_search()
         return
     end
 
+    local valid_buffers = {}
+    for _, bufnr in ipairs(api.nvim_list_bufs()) do
+        if api.nvim_buf_is_valid(bufnr) and api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, 'buflisted') then
+            local name = api.nvim_buf_get_name(bufnr)
+            if name ~= '' then
+                table.insert(valid_buffers, bufnr)
+            end
+        end
+    end
+
+    if #valid_buffers == 0 then
+        vim.notify('No valid buffers to show', vim.log.levels.INFO)
+        return
+    end
+
     local buffers = {}
-    local current_bufnr = api.nvim_get_current_buf()
 
     for _, bufnr in ipairs(api.nvim_list_bufs()) do
         if api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, 'buflisted') then
             local name = api.nvim_buf_get_name(bufnr)
             local filename = fn.fnamemodify(name, ':t')
-            local path = format_path(bufnr)
-            local icon = get_icon(bufnr)
-            local modified = api.nvim_buf_get_option(bufnr, 'modified') and ' [+]' or ''
-            local current = bufnr == current_bufnr and ' *' or ''
+            local function format_buffer(bufnr)
+                if not api.nvim_buf_is_valid(bufnr) then
+                    return nil
+                end
 
-            if name == '' then
-                name = '[No Name]'
-                path = '[No Name]'
+                local name = api.nvim_buf_get_name(bufnr)
+                if name == '' then
+                    return nil
+                end
+
+                local icon = get_icon(bufnr)
+                local path = format_path(bufnr)
+                local modified = api.nvim_buf_get_option(bufnr, 'modified') and ' [+]' or ''
+                local current = bufnr == api.nvim_get_current_buf() and ' *' or ''
+
+                return string.format('%s %s%s%s', icon, path, modified, current)
             end
 
             table.insert(buffers, {
                 name = name,
-                display = string.format('%s %s%s%s', icon, path, modified, current),
+                display = format_buffer(bufnr),
                 bufnr = bufnr,
             })
         end
@@ -618,13 +637,15 @@ function M.fzf_search()
     local source = {}
     local previewer = {}
     for _, buf in ipairs(buffers) do
-        table.insert(source, buf.display)
-        previewer[buf.display] = function()
-            if api.nvim_buf_is_valid(buf.bufnr) then
-                local lines = api.nvim_buf_get_lines(buf.bufnr, 0, -1, false)
-                return table.concat(lines, '\n')
+        if api.nvim_buf_is_valid(buf.bufnr) then
+            local name = api.nvim_buf_get_name(buf.bufnr)
+            if name ~= '' then
+                table.insert(source, buf.display)
+                previewer[buf.display] = function()
+                    local lines = api.nvim_buf_get_lines(buf.bufnr, 0, -1, false)
+                    return table.concat(lines, '\n')
+                end
             end
-            return ''
         end
     end
 
