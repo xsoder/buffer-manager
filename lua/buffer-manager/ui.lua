@@ -99,10 +99,7 @@ local function get_buffer_list()
 		then
 			local name = api.nvim_buf_get_name(bufnr)
 			if name ~= "" then
-				vim.notify(string.format("Checking buffer: %s (exists: %s)", name, vim.fn.filereadable(name)), vim.log.levels.DEBUG)
-				if vim.fn.filereadable(name) == 1 then
-					table.insert(buffers, bufnr)
-				end
+				table.insert(buffers, bufnr)
 			end
 		end
 	end
@@ -495,67 +492,60 @@ function M.delete_buffer()
 	end
 end
 
+local function ensure_fzf_loaded()
+  if not package.loaded["fzf-lua"] then
+    local ok, _ = pcall(require, "fzf-lua")
+    if not ok then
+      vim.notify("FZF-Lua not installed. Please run :PackerInstall", vim.log.levels.ERROR)
+      return false
+    end
+  end
+  return true
+end
+
 function M.fzf_search()
-	if not package.loaded["fzf-lua"] then
-		vim.notify("FZF-Lua not loaded. Please install fzf-lua.nvim plugin", vim.log.levels.ERROR)
-		return
-	end
-
-	local fzf = require("fzf-lua")
-	if not fzf or not fzf.fzf_exec then
-		vim.notify("FZF-Lua not properly initialized", vim.log.levels.ERROR)
-		return
-	end
-
-	local buffers = {}
-	for _, bufnr in ipairs(api.nvim_list_bufs()) do
-		if api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, "buflisted") then
-			local name = api.nvim_buf_get_name(bufnr)
-			if name ~= "" then
-				vim.notify(string.format("Checking buffer: %s (exists: %s)", name, vim.fn.filereadable(name)), vim.log.levels.DEBUG)
-				if vim.fn.filereadable(name) == 1 then
-					table.insert(buffers, {
-						bufnr = bufnr,
-						name = name,
-						display = string.format("%s (%s)", fn.fnamemodify(name, ":t"), bufnr)
-					})
-				end
-			end
-		end
-	end
-
-	if #buffers == 0 then
-		vim.notify("No buffers available", vim.log.levels.INFO)
-		return
-	end
-
-	local fzf_items = {}
-	for _, buf in ipairs(buffers) do
-		table.insert(fzf_items, buf.display)
-	end
-
-	local ok, err = pcall(function()
-		fzf.fzf_exec(fzf_items, {
-			prompt = "Search Buffers❯ ",
-			previewer = "builtin",
-			actions = {
-				["default"] = function(selected)
-					if selected and selected[1] then
-						for _, buf in ipairs(buffers) do
-							if buf.display == selected[1] then
-								api.nvim_set_current_buf(buf.bufnr)
-								break
-							end
-						end
-					end
-				end
-			}
-		})
-	end)
-
-	if not ok then
-		vim.notify("FZF search failed: " .. tostring(err), vim.log.levels.ERROR)
-	end
+  if not ensure_fzf_loaded() then return end
+  
+  local fzf = require("fzf-lua")
+  local ok, _ = pcall(function()
+    local buffers = {}
+    for _, bufnr in ipairs(api.nvim_list_bufs()) do
+      if api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, "buflisted") then
+        local name = api.nvim_buf_get_name(bufnr)
+        if name ~= "" then
+          table.insert(buffers, {
+            bufnr = bufnr,
+            name = name,
+            display = string.format("%s (%s)", fn.fnamemodify(name, ":t"), bufnr)
+          })
+        end
+      end
+    end
+    
+    fzf.fzf_exec(
+      vim.tbl_map(function(buf) return buf.display end, buffers),
+      {
+        prompt = "Buffers❯ ",
+        previewer = false,
+        actions = {
+          ["default"] = function(selected)
+            if selected and selected[1] then
+              for _, buf in ipairs(buffers) do
+                if buf.display == selected[1] then
+                  api.nvim_set_current_buf(buf.bufnr)
+                  break
+                end
+              end
+            end
+          end
+        }
+      }
+    )
+  end)
+  
+  if not ok then
+    vim.notify("FZF error occurred", vim.log.levels.ERROR)
+  end
 end
 
 -- Show help with all available keybindings
