@@ -28,22 +28,17 @@ function M.setup(opts)
 
 	-- Set up global FZF keybinding (Space+gf)
 	-- Use vim.keymap.set which is more reliable than nvim_set_keymap
-	vim.keymap.set(
-		"n",
-		"<Space>gf",
-		function()
-			-- Ensure fzf-lua is available
-			local has_fzf, _ = pcall(require, "fzf-lua")
-			if not has_fzf then
-				vim.notify("FZF search requires fzf-lua plugin. Please install it first.", vim.log.levels.WARN)
-				return
-			end
-			
-			-- Call the fzf_search function directly
-			require("buffer-manager.ui").fzf_search()
-		end,
-		{ noremap = true, silent = true, desc = "Buffer Manager: FZF Search" }
-	)
+	vim.keymap.set("n", "<Space>gf", function()
+		-- Ensure fzf-lua is available
+		local has_fzf, _ = pcall(require, "fzf-lua")
+		if not has_fzf then
+			vim.notify("FZF search requires fzf-lua plugin. Please install it first.", vim.log.levels.WARN)
+			return
+		end
+
+		-- Call the fzf_search function directly
+		require("buffer-manager.ui").fzf_search()
+	end, { noremap = true, silent = true, desc = "Buffer Manager: FZF Search" })
 end
 
 M.open = ui.open
