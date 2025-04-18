@@ -230,9 +230,8 @@ local function create_window()
         set_normal_keymaps()
     end
 
-    -- Use telescope if available, otherwise fall back to native API
+    -- Telescope UI for open (Space+bb)
     if has_telescope then
-        -- Create a telescope picker
         local picker = pickers.new({
             prompt_title = " Buffer Manager ",
             finder = finders.new_table({
@@ -262,6 +261,7 @@ local function create_window()
         picker:find()
         return picker.prompt_bufnr
     else
+        -- Always use native floating window for buffer manager
         -- Window options for native API
         local opts = {
             style = "minimal",
