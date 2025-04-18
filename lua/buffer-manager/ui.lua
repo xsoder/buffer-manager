@@ -169,8 +169,8 @@ local function update_buffer_list()
 
     if state.search_mode then
         local prompt_text = config.options.search.prompt .. state.search_query
-        api.nvim_buf_set_lines(state.buffer, #lines, #lines, false, { "" })
-        api.nvim_buf_set_lines(state.buffer, #lines, -1, false, { prompt_text })
+        -- Insert search prompt at the top of the list
+        api.nvim_buf_set_lines(state.buffer, 0, 0, false, { prompt_text, "" })
     end
 
     api.nvim_buf_set_option(state.buffer, "modifiable", false)
@@ -183,8 +183,7 @@ local function update_buffer_list()
     if state.win_id and api.nvim_win_is_valid(state.win_id) and #state.buffers > 0 then
         if state.search_mode then
             local last_line = api.nvim_buf_line_count(state.buffer)
-            local prompt_text = config.options.search.prompt .. state.search_query
-            api.nvim_win_set_cursor(state.win_id, { last_line, #prompt_text })
+            api.nvim_win_set_cursor(state.win_id, { last_line, 0 })
         else
             api.nvim_win_set_cursor(state.win_id, { state.selected_line, 0 })
         end
