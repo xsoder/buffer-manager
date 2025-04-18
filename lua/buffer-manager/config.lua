@@ -45,7 +45,7 @@ local M = {
 	},
 }
 
- Apply user configuration
+-- Apply user configuration
 function M.setup(opts)
 	opts = opts or {}
 	M.options = vim.tbl_deep_extend("force", M.options, opts)
