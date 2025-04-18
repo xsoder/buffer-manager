@@ -1,13 +1,13 @@
 # buffer-manager.nvim
 
-A Neovim plugin that provides Emacs/Doom Emacs-like buffer management with a clean, interactive UI.
+A Neovim plugin that provides buffer management with a clean, interactive UI.
 
 ![Buffer Manager Screenshot](plugin.png)
 
 ## Features
 
 - Interactive buffer list in a floating window
-- Emacs/Doom Emacs-like keybindings (`<leader>bb`)
+- Doom Emacs-like keybindings (`<leader>bb`)
 - Support for buffer operations (select, delete, split)
 - Customizable display options
 - Integration with nvim-web-devicons for file icons
