@@ -6,9 +6,11 @@ local ui = require("buffer-manager.ui")
 function M.setup(opts)
 	config.setup(opts)
 
+	-- Register commands
 	vim.api.nvim_create_user_command("BufferManager", ui.open, {})
 	vim.api.nvim_create_user_command("BufferManagerFzf", ui.fzf_search, {})
 
+	-- Set up default keybindings if enabled
 	if config.options.default_mappings then
 		local open_key = config.options.mappings.open:gsub("<leader>", "<Space>")
 		local vertical_key = config.options.mappings.vertical:gsub("<leader>", "<Space>")
@@ -22,11 +24,10 @@ function M.setup(opts)
 
 		vim.keymap.set("n", config.options.mappings.horizontal, ui.open_horizontal, { noremap = true, silent = true })
 		vim.keymap.set("n", horizontal_key, ui.open_horizontal, { noremap = true, silent = true })
-
-		-- Buffer keybindings
 	end
 
-	-- Always set up FZF search (<Space>gf), regardless of default_mappings setting
+	-- IMPORTANT: Always set up FZF search with <Space>gf, regardless of default_mappings setting
+	-- This ensures the global <Space>gf keybinding is always available
 	vim.keymap.set("n", "<Space>gf", ui.fzf_search, { noremap = true, silent = true })
 end
 

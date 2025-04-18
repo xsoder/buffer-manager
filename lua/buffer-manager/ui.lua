@@ -3,9 +3,11 @@ local fn = vim.fn
 local config = require("buffer-manager.config")
 local Job = require("plenary.job")
 
+-- Check if fzf-lua is available
 local has_fzf, fzf = pcall(require, "fzf-lua")
 if not has_fzf then
 	config.options.fzf.enabled = false
+	vim.notify("buffer-manager.nvim: fzf-lua not found. Install it with your package manager to enable FZF features.", vim.log.levels.INFO)
 end
 
 local M = {}
@@ -494,12 +496,16 @@ function M.delete_buffer()
 	end
 end
 
+-- FZF buffer search functionality
 function M.fzf_search()
+	-- Check if fzf-lua is available
 	if not has_fzf then
-		M.open()
+		vim.notify("FZF search requires fzf-lua plugin. Please install it first.", vim.log.levels.WARN)
+		M.open() -- Fallback to regular buffer manager
 		return
 	end
 
+	-- Don't run if already in search mode
 	if state.search_mode then
 		return
 	end
