@@ -19,7 +19,7 @@ M.options = {
 		show_numbers = true,
 		show_modified = true,
 		show_flags = true,
-		path_display = "shortened",
+		path_display = "filename",
 	},
 	search = {
 		enabled = true,
@@ -32,7 +32,7 @@ M.options = {
 		keybinding = "gf",
 		prompt = "Buffer Search> ",
 		preview = true,
-		preview_window = "right:50%",
+		preview_window = "right:30%",
 	},
 	ripgrep = {
 		enabled = true,
