@@ -11,8 +11,9 @@ A Neovim plugin that provides buffer management with a clean, interactive UI.
 - Support for buffer operations (select, delete, split)
 - Customizable display options
 - Integration with nvim-web-devicons for file icons
-- Fuzzy finding with FZF integration
+- Fuzzy finding with FZF integration (consistent UI with main buffer manager)
 - Full-text search with ripgrep integration
+- Line position display showing current line number for active buffers
 
 ## Installation
 
@@ -82,6 +83,8 @@ require('buffer-manager').setup({
     prompt = "Buffer Search> ",
     preview = true,
     preview_window = "right:40%",
+    window_width = 0.3,  -- Matches the main buffer manager window size
+    window_height = 0.3, -- Matches the main buffer manager window size
   },
   ripgrep = {
     enabled = true,
@@ -116,7 +119,7 @@ require('buffer-manager').setup({
 - `/`: enter search mode
 - Type to filter the buffer list in real-time
 - Press `<Enter>` to apply the search filter or `<Esc>` to cancel
-- `gf`: Open FZF fuzzy finder for buffers (customizable)
+- `gf`: Open FZF fuzzy finder for buffers (customizable, uses same UI size/position as main buffer manager)
 - `gr`: Search buffer contents with ripgrep (customizable)
 
 ### Commands
