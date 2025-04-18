@@ -665,9 +665,14 @@ function M.fzf_search()
 			["--no-preview"] = "",
 		},
 		winopts = {
-			height = config.options.fzf.window_height or 0.7,
-			width = config.options.fzf.window_width or 0.8,
+			height = config.options.window.height_ratio,
+			width = config.options.window.width_ratio,
 			border = config.options.window.border,
+			relative = "editor",
+			row = math.floor((vim.o.lines - math.floor(vim.o.lines * config.options.window.height_ratio)) / 2),
+			col = math.floor((vim.o.columns - math.floor(vim.o.columns * config.options.window.width_ratio)) / 2),
+			title = " Buffer Manager ",
+			title_pos = "center",
 		},
 		actions = {
 			["default"] = function(selected)
