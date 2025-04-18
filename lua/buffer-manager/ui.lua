@@ -359,7 +359,7 @@ function set_normal_keymaps()
 		map("n", config.options.search.keybinding, ":lua require('buffer-manager.ui').enter_search_mode()<CR>")
 	end
 
-	-- Note: FZF keybinding removed from buffer manager UI
+	map("n", "<Space>gf", ":lua require('buffer-manager.ui').fzf_search()<CR>")
 end
 
 local function set_options()
@@ -518,30 +518,10 @@ function M.fzf_search()
 	end
 
 	fzf.fzf_exec(fzf_items, {
-		prompt = "Buffers❯ ",
+		prompt = "Search Buffers❯ ",
 		previewer = "builtin",
 		actions = {
 			["default"] = function(selected)
-				local selected_buf = selected[1]
-				for _, buf in ipairs(buffers) do
-					if buf.display == selected_buf then
-						api.nvim_set_current_buf(buf.bufnr)
-						break
-					end
-				end
-			end,
-			["ctrl-v"] = function(selected)
-				api.nvim_command("vsplit")
-				local selected_buf = selected[1]
-				for _, buf in ipairs(buffers) do
-					if buf.display == selected_buf then
-						api.nvim_set_current_buf(buf.bufnr)
-						break
-					end
-				end
-			end,
-			["ctrl-x"] = function(selected)
-				api.nvim_command("split")
 				local selected_buf = selected[1]
 				for _, buf in ipairs(buffers) do
 					if buf.display == selected_buf then
