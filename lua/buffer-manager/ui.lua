@@ -508,11 +508,11 @@ function M.fzf_search()
 	for _, bufnr in ipairs(api.nvim_list_bufs()) do
 		if api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, "buflisted") then
 			local name = api.nvim_buf_get_name(bufnr)
-			if name ~= "" then
+			if name ~= "" and vim.fn.filereadable(name) == 1 then
 				table.insert(buffers, {
 					bufnr = bufnr,
 					name = name,
-					display = fn.fnamemodify(name, ":t")
+					display = string.format("%s (%s)", fn.fnamemodify(name, ":t"), bufnr)
 				})
 			end
 		end
