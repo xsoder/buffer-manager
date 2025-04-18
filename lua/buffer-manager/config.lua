@@ -56,9 +56,12 @@ function M.setup(opts)
 	end
 
 	-- Check for required dependencies
-	if M.options.fzf.enabled and not pcall(require, "fzf-lua") then
-		M.options.fzf.enabled = false
-		vim.notify("buffer-manager.nvim: fzf-lua not found, disabling fzf integration", vim.log.levels.WARN)
+	if M.options.fzf.enabled then
+		local has_fzf = pcall(require, "fzf-lua")
+		if not has_fzf then
+			M.options.fzf.enabled = false
+			vim.notify("buffer-manager.nvim: fzf-lua not found. Install it with your package manager to enable FZF features.", vim.log.levels.INFO)
+		end
 	end
 
 	if M.options.ripgrep.enabled then

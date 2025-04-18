@@ -2,7 +2,11 @@ local api = vim.api
 local fn = vim.fn
 local config = require("buffer-manager.config")
 local Job = require('plenary.job')
-local fzf = require('fzf-lua')
+
+local has_fzf, fzf = pcall(require, 'fzf-lua')
+if not has_fzf then
+    config.options.fzf.enabled = false
+end
 
 local M = {}
 
@@ -573,6 +577,11 @@ end
 
 -- FZF search through buffer names and content
 function M.fzf_search()
+    if not has_fzf then
+        M.open()
+        return
+    end
+
     if state.search_mode then
         return
     end
