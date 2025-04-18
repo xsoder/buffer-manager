@@ -1,4 +1,4 @@
-# buffer-manager.nvim
+# buffer-manager
 
 A Neovim plugin that provides buffer management with a clean, interactive UI.
 
