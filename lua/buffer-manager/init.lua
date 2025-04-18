@@ -4,41 +4,40 @@ local config = require("buffer-manager.config")
 local ui = require("buffer-manager.ui")
 
 function M.setup(opts)
-	config.setup(opts)
+    config.setup(opts)
 
-	-- Register commands
-	vim.api.nvim_create_user_command("BufferManager", ui.open, {})
-	vim.api.nvim_create_user_command("BufferManagerFzf", ui.fzf_search, {})
+    -- Register commands
+    vim.api.nvim_create_user_command("BufferManager", ui.open, {})
+    vim.api.nvim_create_user_command("BufferManagerFzf", ui.fzf_search, {})
 
-	-- Set up default keybindings if enabled
-	if config.options.default_mappings then
-		local open_key = config.options.mappings.open:gsub("<leader>", "<Space>")
-		local vertical_key = config.options.mappings.vertical:gsub("<leader>", "<Space>")
-		local horizontal_key = config.options.mappings.horizontal:gsub("<leader>", "<Space>")
+    -- Set up default keybindings if enabled
+    if config.options.default_mappings then
+        local open_key = config.options.mappings.open:gsub("<leader>", "<Space>")
+        local vertical_key = config.options.mappings.vertical:gsub("<leader>", "<Space>")
+        local horizontal_key = config.options.mappings.horizontal:gsub("<leader>", "<Space>")
 
-		vim.keymap.set("n", config.options.mappings.open, ui.open, { noremap = true, silent = true })
-		vim.keymap.set("n", open_key, ui.open, { noremap = true, silent = true })
+        vim.keymap.set("n", config.options.mappings.open, ui.open, { noremap = true, silent = true })
+        vim.keymap.set("n", open_key, ui.open, { noremap = true, silent = true })
 
-		vim.keymap.set("n", config.options.mappings.vertical, ui.open_vertical, { noremap = true, silent = true })
-		vim.keymap.set("n", vertical_key, ui.open_vertical, { noremap = true, silent = true })
+        vim.keymap.set("n", config.options.mappings.vertical, ui.open_vertical, { noremap = true, silent = true })
+        vim.keymap.set("n", vertical_key, ui.open_vertical, { noremap = true, silent = true })
 
-		vim.keymap.set("n", config.options.mappings.horizontal, ui.open_horizontal, { noremap = true, silent = true })
-		vim.keymap.set("n", horizontal_key, ui.open_horizontal, { noremap = true, silent = true })
-	end
+        vim.keymap.set("n", config.options.mappings.horizontal, ui.open_horizontal, { noremap = true, silent = true })
+        vim.keymap.set("n", horizontal_key, ui.open_horizontal, { noremap = true, silent = true })
+    end
 
-	-- Set up global FZF keybinding (Space+gf)
-	-- Use vim.keymap.set which is more reliable than nvim_set_keymap
-	vim.keymap.set("n", "<Space>gf", function()
-		-- Ensure fzf-lua is available
-		local has_fzf, _ = pcall(require, "fzf-lua")
-		if not has_fzf then
-			vim.notify("FZF search requires fzf-lua plugin. Please install it first.", vim.log.levels.WARN)
-			return
-		end
+    -- Set up global FZF keybinding (Space+gf)
+    vim.keymap.set("n", "<Space>gf", function()
+        -- Ensure fzf-lua is available
+        local has_fzf, _ = pcall(require, "fzf-lua")
+        if not has_fzf then
+            vim.notify("FZF search requires fzf-lua plugin. Please install it first.", vim.log.levels.WARN)
+            return
+        end
 
-		-- Call the fzf_search function directly
-		require("buffer-manager.ui").fzf_search()
-	end, { noremap = true, silent = true, desc = "Buffer Manager: FZF Search" })
+        -- Call the fzf_search function directly
+        require("buffer-manager.ui").fzf_search()
+    end, { noremap = true, silent = true, desc = "Buffer Manager: FZF Search" })
 end
 
 M.open = ui.open
@@ -56,5 +55,6 @@ M.remove_from_search = ui.remove_from_search
 M.apply_search = ui.apply_search
 M.filter_buffers = ui.filter_buffers
 M.fzf_search = ui.fzf_search
+M.show_help = ui.show_help
 
 return M
