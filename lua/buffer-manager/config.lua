@@ -29,7 +29,7 @@ M.options = {
 	},
 	fzf = {
 		enabled = true,
-		keybinding = "gf",
+		keybinding = "", -- Removed gf keybinding since we use <Space>gf globally
 		prompt = "Buffer Search> ",
 		preview = true,
 		preview_window = "right:50%",

@@ -361,9 +361,7 @@ function set_normal_keymaps()
 		map("n", config.options.search.keybinding, ":lua require('buffer-manager.ui').enter_search_mode()<CR>")
 	end
 
-
-
-
+	-- We don't add the FZF keybinding here since it's already available globally as <Space>gf
 end
 
 local function set_options()
@@ -495,8 +493,6 @@ function M.delete_buffer()
 		update_buffer_list()
 	end
 end
-
-
 
 function M.fzf_search()
 	if not has_fzf then
@@ -674,8 +670,6 @@ function M.show_help()
 	if config.options.fzf.enabled then
 		table.insert(lines, "   " .. config.options.fzf.keybinding .. "                    : Open FZF fuzzy finder")
 	end
-
-
 
 	table.insert(lines, "")
 	table.insert(lines, " Other:")

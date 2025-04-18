@@ -88,7 +88,7 @@ require('buffer-manager').setup({
   },
   fzf = {
     enabled = true,
-    keybinding = "gf",
+    keybinding = "", -- Empty since we use <Space>gf globally
     prompt = "Buffer Search> ",
     preview = true,
     preview_window = "right:40%",
@@ -119,7 +119,7 @@ require('buffer-manager').setup({
 - `/`: enter search mode
 - Type to filter the buffer list in real-time
 - Press `<Enter>` to apply the search filter or `<Esc>` to cancel
-- `gf`: Open FZF fuzzy finder for buffers (customizable, uses same UI size/position as main buffer manager)
+- `<Space>gf`: Open FZF fuzzy finder for buffers (global keybinding)
 - `?`: Show help menu with all available keybindings
 
 ### Commands
