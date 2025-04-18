@@ -18,6 +18,7 @@ function M.setup(opts)
 	return M
 end
 
+-- Expose all UI functions
 M.open = ui.open
 M.open_vertical = ui.open_vertical
 M.open_horizontal = ui.open_horizontal
@@ -31,5 +32,6 @@ M.exit_search_mode = ui.exit_search_mode
 M.add_to_search = ui.add_to_search
 M.remove_from_search = ui.remove_from_search
 M.apply_search = ui.apply_search
+M.filter_buffers = ui.filter_buffers
 
 return M
