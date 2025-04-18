@@ -699,7 +699,7 @@ function M.show_help()
 	api.nvim_win_set_option(help_win, "winblend", 0)
 
 	-- close on any key
-	local keys = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`-=[]\\;',./~!@#$%^&*()_+{}|:\\"<>?"
+	local keys = [[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`-=[]\;',./~!@#$%^&*()_+{}|:"<>?]]
 	for i = 1, #keys do
 		local c = keys:sub(i, i)
 		api.nvim_buf_set_keymap(help_buffer, "n", c, "<cmd>close<CR>", { silent = true, noremap = true })
