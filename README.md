@@ -14,7 +14,6 @@ A Neovim plugin that provides buffer management with a clean, interactive UI.
 - Customizable display options
 - Integration with nvim-web-devicons for file icons
 - Fuzzy finding with FZF integration (consistent UI with main buffer manager)
-- Full-text search with ripgrep integration
 - Line position display showing current line number for active buffers
 - Help menu showing all available keybindings
 - Clean UI with hidden command execution (no status bar clutter)
@@ -73,13 +72,19 @@ require('buffer-manager').setup({
     width_ratio = 0.3,
     height_ratio = 0.3,
     border = "rounded",
-    position = "center",
+    position = "center", -- Options: "center", "left", "right", "top", "bottom"
   },
   display = {
     show_numbers = true,
     show_modified = true,
     show_flags = true,
-    path_display = "shortened",
+    path_display = "shortened", -- Options: "filename", "relative", "absolute", "shortened"
+  },
+  search = {
+    enabled = true,
+    keybinding = "/",
+    prompt = "Search: ",
+    live_update = true,
   },
   fzf = {
     enabled = true,
@@ -89,16 +94,7 @@ require('buffer-manager').setup({
     preview_window = "right:40%",
     window_width = 0.3,  -- Matches the main buffer manager window size
     window_height = 0.3, -- Matches the main buffer manager window size
-  },
-  ripgrep = {
-    enabled = true,
-    keybinding = "gr",
-    prompt = "Ripgrep search: ",
-    args = {
-      "--vimgrep",
-      "--smart-case",
-    },
-  },
+  }
 })
 ```
 
@@ -124,7 +120,6 @@ require('buffer-manager').setup({
 - Type to filter the buffer list in real-time
 - Press `<Enter>` to apply the search filter or `<Esc>` to cancel
 - `gf`: Open FZF fuzzy finder for buffers (customizable, uses same UI size/position as main buffer manager)
-- `gr`: Search buffer contents with ripgrep (customizable)
 - `?`: Show help menu with all available keybindings
 
 ### Commands
@@ -148,8 +143,7 @@ require('buffer-manager').delete_buffer()
 
 - [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) (optional): For file icons
 - [fzf-lua](https://github.com/ibhagwan/fzf-lua) (optional): For fuzzy finding functionality
-- [ripgrep](https://github.com/BurntSushi/ripgrep) (optional): For full-text search functionality
-- [plenary.nvim](https://github.com/nvim-lua/plenary.nvim): Required for ripgrep integration
+
 
 ## License
 

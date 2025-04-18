@@ -36,15 +36,7 @@ M.options = {
 		window_width = 0.8,
 		window_height = 0.7,
 	},
-	ripgrep = {
-		enabled = true,
-		keybinding = "gr",
-		prompt = "Ripgrep search: ",
-		args = {
-			"vimgrep",
-			"smart-case",
-		},
-	},
+
 }
 
 function M.setup(opts)
@@ -67,16 +59,7 @@ function M.setup(opts)
 		end
 	end
 
-	if M.options.ripgrep.enabled then
-		local rg_exists = vim.fn.executable("rg") == 1
-		if not rg_exists then
-			M.options.ripgrep.enabled = false
-			vim.notify(
-				"buffer-manager.nvim: ripgrep (rg) not found, disabling ripgrep integration",
-				vim.log.levels.WARN
-			)
-		end
-	end
+
 
 	M.setup_highlights()
 end

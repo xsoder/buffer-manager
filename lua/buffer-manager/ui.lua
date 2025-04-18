@@ -361,15 +361,9 @@ function set_normal_keymaps()
 		map("n", config.options.search.keybinding, ":lua require('buffer-manager.ui').enter_search_mode()<CR>")
 	end
 
-	-- Add ripgrep mapping
-	if config.options.ripgrep.enabled then
-		map("n", config.options.ripgrep.keybinding, ":lua require('buffer-manager.ui').ripgrep_search()<CR>")
-	end
 
-	-- Add fzf mapping
-	if config.options.fzf.enabled then
-		map("n", config.options.fzf.keybinding, ":lua require('buffer-manager.ui').fzf_search()<CR>")
-	end
+
+
 end
 
 local function set_options()
@@ -502,67 +496,7 @@ function M.delete_buffer()
 	end
 end
 
--- Ripgrep search in buffer contents
-function M.ripgrep_search()
-	if state.search_mode then
-		return
-	end
 
-	-- Create input dialog for search term
-	vim.ui.input({ prompt = config.options.ripgrep.prompt }, function(input)
-		if not input or input == "" then
-			return
-		end
-
-		local buffer_paths = {}
-		for _, bufnr in ipairs(state.buffers) do
-			local path = api.nvim_buf_get_name(bufnr)
-			if path ~= "" then
-				table.insert(buffer_paths, path)
-			end
-		end
-
-		-- Run ripgrep
-		Job:new({
-			command = "rg",
-			args = vim.list_extend(vim.deepcopy(config.options.ripgrep.args), { input, unpack(buffer_paths) }),
-			on_exit = function(j, return_val)
-				if return_val == 0 then
-					local results = j:result()
-					state.rg_results = {}
-
-					-- Parse results
-					for _, line in ipairs(results) do
-						local file, lnum, col, text = line:match("([^:]+):(%d+):(%d+):(.+)")
-						if file then
-							table.insert(state.rg_results, {
-								file = file,
-								lnum = tonumber(lnum),
-								col = tonumber(col),
-								text = text,
-							})
-						end
-					end
-
-					-- Display results
-					if #state.rg_results > 0 then
-						local lines = {}
-						for _, result in ipairs(state.rg_results) do
-							local filename = fn.fnamemodify(result.file, ":t")
-							table.insert(lines, string.format("%s:%d: %s", filename, result.lnum, result.text))
-						end
-
-						api.nvim_buf_set_option(state.buffer, "modifiable", true)
-						api.nvim_buf_set_lines(state.buffer, 0, -1, false, lines)
-						api.nvim_buf_set_option(state.buffer, "modifiable", false)
-					else
-						print("No matches found")
-					end
-				end
-			end,
-		}):start()
-	end)
-end
 
 function M.fzf_search()
 	if not has_fzf then
@@ -741,9 +675,7 @@ function M.show_help()
 		table.insert(lines, "   " .. config.options.fzf.keybinding .. "                    : Open FZF fuzzy finder")
 	end
 
-	if config.options.ripgrep.enabled then
-		table.insert(lines, "   " .. config.options.ripgrep.keybinding .. "                    : Search with ripgrep")
-	end
+
 
 	table.insert(lines, "")
 	table.insert(lines, " Other:")

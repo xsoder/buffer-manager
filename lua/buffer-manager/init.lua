@@ -43,6 +43,6 @@ M.remove_from_search = ui.remove_from_search
 M.apply_search = ui.apply_search
 M.filter_buffers = ui.filter_buffers
 M.fzf_search = ui.fzf_search
-M.ripgrep_search = ui.ripgrep_search
+
 
 return M
