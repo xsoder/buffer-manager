@@ -674,7 +674,7 @@ function M.show_help()
 	}
 
 	if config.options.fzf.enabled then
-		table.insert(lines, "   " .. config.options.fzf.keybinding .. "                    : Open FZF fuzzy finder")
+		table.insert(lines, "   <Space>gf             : Open FZF fuzzy finder (global keybinding)")
 	end
 
 	table.insert(lines, "")
