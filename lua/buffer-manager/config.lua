@@ -10,8 +10,8 @@ M.options = {
 		horizontal = "<leader>bs",
 	},
 	window = {
-		width_ratio = 0.07,
-		height_ratio = 0.07,
+		width_ratio = 0.03,
+		height_ratio = 0.03,
 		border = "rounded",
 		position = "center",
 	},

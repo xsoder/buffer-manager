@@ -1,11 +1,11 @@
 local api = vim.api
 local fn = vim.fn
 local config = require("buffer-manager.config")
-local Job = require('plenary.job')
+local Job = require("plenary.job")
 
-local has_fzf, fzf = pcall(require, 'fzf-lua')
+local has_fzf, fzf = pcall(require, "fzf-lua")
 if not has_fzf then
-    config.options.fzf.enabled = false
+	config.options.fzf.enabled = false
 end
 
 local M = {}
@@ -45,8 +45,8 @@ end
 -- Format buffer path based on configuration
 local function format_path(bufnr)
 	local name = api.nvim_buf_get_name(bufnr)
-	if name == '' then
-		return '[No Name]'
+	if name == "" then
+		return "[No Name]"
 	end
 
 	local path_display = config.options.display.path_display
@@ -79,7 +79,7 @@ local function format_buffer(bufnr)
 			and (api.nvim_buf_get_option(bufnr, "modified") and " [+]" or "")
 		or ""
 	local indicator = config.options.display.show_flags and (api.nvim_get_current_buf() == bufnr and " *" or "") or ""
-	
+
 	-- Get current line position for the buffer
 	local line_pos = ""
 	if api.nvim_get_current_buf() == bufnr then
@@ -94,9 +94,13 @@ local uv = vim.loop
 local function get_buffer_list()
 	local buffers = {}
 	for _, bufnr in ipairs(api.nvim_list_bufs()) do
-		if api.nvim_buf_is_valid(bufnr) and api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, 'buflisted') then
+		if
+			api.nvim_buf_is_valid(bufnr)
+			and api.nvim_buf_is_loaded(bufnr)
+			and api.nvim_buf_get_option(bufnr, "buflisted")
+		then
 			local name = api.nvim_buf_get_name(bufnr)
-			if name ~= '' and uv.fs_stat(name) then
+			if name ~= "" and uv.fs_stat(name) then
 				table.insert(buffers, bufnr)
 			end
 		end
@@ -520,206 +524,211 @@ end
 
 -- Ripgrep search in buffer contents
 function M.ripgrep_search()
-    if state.search_mode then
-        return
-    end
+	if state.search_mode then
+		return
+	end
 
-    -- Create input dialog for search term
-    vim.ui.input({ prompt = config.options.ripgrep.prompt }, function(input)
-        if not input or input == '' then
-            return
-        end
+	-- Create input dialog for search term
+	vim.ui.input({ prompt = config.options.ripgrep.prompt }, function(input)
+		if not input or input == "" then
+			return
+		end
 
-        -- Get list of buffer paths
-        local buffer_paths = {}
-        for _, bufnr in ipairs(state.buffers) do
-            local path = api.nvim_buf_get_name(bufnr)
-            if path ~= '' then
-                table.insert(buffer_paths, path)
-            end
-        end
+		-- Get list of buffer paths
+		local buffer_paths = {}
+		for _, bufnr in ipairs(state.buffers) do
+			local path = api.nvim_buf_get_name(bufnr)
+			if path ~= "" then
+				table.insert(buffer_paths, path)
+			end
+		end
 
-        -- Run ripgrep
-        Job:new({
-            command = 'rg',
-            args = vim.list_extend(vim.deepcopy(config.options.ripgrep.args), {input, unpack(buffer_paths)}),
-            on_exit = function(j, return_val)
-                if return_val == 0 then
-                    local results = j:result()
-                    state.rg_results = {}
-                    
-                    -- Parse results
-                    for _, line in ipairs(results) do
-                        local file, lnum, col, text = line:match('([^:]+):(%d+):(%d+):(.+)')
-                        if file then
-                            table.insert(state.rg_results, {
-                                file = file,
-                                lnum = tonumber(lnum),
-                                col = tonumber(col),
-                                text = text
-                            })
-                        end
-                    end
+		-- Run ripgrep
+		Job:new({
+			command = "rg",
+			args = vim.list_extend(vim.deepcopy(config.options.ripgrep.args), { input, unpack(buffer_paths) }),
+			on_exit = function(j, return_val)
+				if return_val == 0 then
+					local results = j:result()
+					state.rg_results = {}
 
-                    -- Display results
-                    if #state.rg_results > 0 then
-                        local lines = {}
-                        for _, result in ipairs(state.rg_results) do
-                            local filename = fn.fnamemodify(result.file, ':t')
-                            table.insert(lines, string.format('%s:%d: %s', filename, result.lnum, result.text))
-                        end
+					-- Parse results
+					for _, line in ipairs(results) do
+						local file, lnum, col, text = line:match("([^:]+):(%d+):(%d+):(.+)")
+						if file then
+							table.insert(state.rg_results, {
+								file = file,
+								lnum = tonumber(lnum),
+								col = tonumber(col),
+								text = text,
+							})
+						end
+					end
 
-                        api.nvim_buf_set_option(state.buffer, 'modifiable', true)
-                        api.nvim_buf_set_lines(state.buffer, 0, -1, false, lines)
-                        api.nvim_buf_set_option(state.buffer, 'modifiable', false)
-                    else
-                        print('No matches found')
-                    end
-                end
-            end
-        }):start()
-    end)
+					-- Display results
+					if #state.rg_results > 0 then
+						local lines = {}
+						for _, result in ipairs(state.rg_results) do
+							local filename = fn.fnamemodify(result.file, ":t")
+							table.insert(lines, string.format("%s:%d: %s", filename, result.lnum, result.text))
+						end
+
+						api.nvim_buf_set_option(state.buffer, "modifiable", true)
+						api.nvim_buf_set_lines(state.buffer, 0, -1, false, lines)
+						api.nvim_buf_set_option(state.buffer, "modifiable", false)
+					else
+						print("No matches found")
+					end
+				end
+			end,
+		}):start()
+	end)
 end
 
 -- FZF search through buffer names and content
 function M.fzf_search()
-    if not has_fzf then
-        M.open()
-        return
-    end
+	if not has_fzf then
+		M.open()
+		return
+	end
 
-    if state.search_mode then
-        return
-    end
+	if state.search_mode then
+		return
+	end
 
-    local valid_buffers = {}
-    for _, bufnr in ipairs(api.nvim_list_bufs()) do
-        if api.nvim_buf_is_valid(bufnr) and api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, 'buflisted') then
-            local name = api.nvim_buf_get_name(bufnr)
-            if name ~= '' then
-                table.insert(valid_buffers, bufnr)
-            end
-        end
-    end
+	local valid_buffers = {}
+	for _, bufnr in ipairs(api.nvim_list_bufs()) do
+		if
+			api.nvim_buf_is_valid(bufnr)
+			and api.nvim_buf_is_loaded(bufnr)
+			and api.nvim_buf_get_option(bufnr, "buflisted")
+		then
+			local name = api.nvim_buf_get_name(bufnr)
+			if name ~= "" then
+				table.insert(valid_buffers, bufnr)
+			end
+		end
+	end
 
-    if #valid_buffers == 0 then
-        vim.notify('No valid buffers to show', vim.log.levels.INFO)
-        return
-    end
+	if #valid_buffers == 0 then
+		vim.notify("No valid buffers to show", vim.log.levels.INFO)
+		return
+	end
 
-    local buffers = {}
+	local buffers = {}
 
-    for _, bufnr in ipairs(api.nvim_list_bufs()) do
-        if api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, 'buflisted') then
-            local name = api.nvim_buf_get_name(bufnr)
-            local filename = fn.fnamemodify(name, ':t')
-            local function format_buffer(bufnr)
-                if not api.nvim_buf_is_valid(bufnr) then
-                    return nil
-                end
+	for _, bufnr in ipairs(api.nvim_list_bufs()) do
+		if api.nvim_buf_is_loaded(bufnr) and api.nvim_buf_get_option(bufnr, "buflisted") then
+			local name = api.nvim_buf_get_name(bufnr)
+			local filename = fn.fnamemodify(name, ":t")
+			local function format_buffer(bufnr)
+				if not api.nvim_buf_is_valid(bufnr) then
+					return nil
+				end
 
-                local name = api.nvim_buf_get_name(bufnr)
-                if name == '' then
-                    return nil
-                end
+				local name = api.nvim_buf_get_name(bufnr)
+				if name == "" then
+					return nil
+				end
 
-                local icon = get_icon(bufnr)
-                local path = format_path(bufnr)
-                local modified = api.nvim_buf_get_option(bufnr, 'modified') and ' [+]' or ''
-                local current = bufnr == api.nvim_get_current_buf() and ' *' or ''
+				local icon = get_icon(bufnr)
+				local path = format_path(bufnr)
+				local modified = api.nvim_buf_get_option(bufnr, "modified") and " [+]" or ""
+				local current = bufnr == api.nvim_get_current_buf() and " *" or ""
 
-                return string.format('%s %s%s%s', icon, path, modified, current)
-            end
+				return string.format("%s %s%s%s", icon, path, modified, current)
+			end
 
-            table.insert(buffers, {
-                name = name,
-                display = format_buffer(bufnr),
-                bufnr = bufnr,
-            })
-        end
-    end
+			table.insert(buffers, {
+				name = name,
+				display = format_buffer(bufnr),
+				bufnr = bufnr,
+			})
+		end
+	end
 
-    local source = {}
-    for _, buf in ipairs(buffers) do
-        if api.nvim_buf_is_valid(buf.bufnr) then
-            local name = api.nvim_buf_get_name(buf.bufnr)
-            if name ~= '' then
-                table.insert(source, buf.display)
-            end
-        end
-    end
+	local source = {}
+	for _, buf in ipairs(buffers) do
+		if api.nvim_buf_is_valid(buf.bufnr) then
+			local name = api.nvim_buf_get_name(buf.bufnr)
+			if name ~= "" then
+				table.insert(source, buf.display)
+			end
+		end
+	end
 
-    fzf.fzf_exec(source, {
-        prompt = config.options.fzf.prompt,
-        fzf_opts = {
-            ['--layout'] = 'reverse',
-            ['--info'] = 'inline',
-            ['--no-preview'] = '',
-        },
-        winopts = {
-            height = 0.8,
-            width = 0.8,
-            border = config.options.window.border,
-        },
-        actions = {
-            ['default'] = function(selected)
-                if selected and #selected > 0 then
-                    local display = selected[1]
-                    for _, buf in ipairs(buffers) do
-                        if buf.display == display then
-                            api.nvim_set_current_buf(buf.bufnr)
-                            break
-                        end
-                    end
-                end
-            end,
-            ['ctrl-v'] = function(selected)
-                if selected and #selected > 0 then
-                    local display = selected[1]
-                    for _, buf in ipairs(buffers) do
-                        if buf.display == display then
-                            vim.cmd('vsplit')
-                            api.nvim_set_current_buf(buf.bufnr)
-                            break
-                        end
-                    end
-                end
-            end,
-            ['ctrl-s'] = function(selected)
-                if selected and #selected > 0 then
-                    local display = selected[1]
-                    for _, buf in ipairs(buffers) do
-                        if buf.display == display then
-                            vim.cmd('split')
-                            api.nvim_set_current_buf(buf.bufnr)
-                            break
-                        end
-                    end
-                end
-            end,
-            ['ctrl-d'] = function(selected)
-                if selected and #selected > 0 then
-                    local display = selected[1]
-                    for _, buf in ipairs(buffers) do
-                        if buf.display == display then
-                            if api.nvim_buf_get_option(buf.bufnr, 'modified') then
-                                local choice = vim.fn.confirm('Buffer is modified. Save changes?', '&Yes\n&No\n&Cancel', 1)
-                                if choice == 1 then
-                                    api.nvim_buf_call(buf.bufnr, function()
-                                        vim.cmd('write')
-                                    end)
-                                elseif choice == 3 then
-                                    return
-                                end
-                            end
-                            pcall(api.nvim_buf_delete, buf.bufnr, { force = false })
-                            break
-                        end
-                    end
-                end
-            end
-        }
-    })
+	fzf.fzf_exec(source, {
+		prompt = config.options.fzf.prompt,
+		fzf_opts = {
+			["--layout"] = "reverse",
+			["--info"] = "inline",
+			["--no-preview"] = "",
+		},
+		winopts = {
+			height = 0.2,
+			width = 0.2,
+			border = config.options.window.border,
+		},
+		actions = {
+			["default"] = function(selected)
+				if selected and #selected > 0 then
+					local display = selected[1]
+					for _, buf in ipairs(buffers) do
+						if buf.display == display then
+							api.nvim_set_current_buf(buf.bufnr)
+							break
+						end
+					end
+				end
+			end,
+			["ctrl-v"] = function(selected)
+				if selected and #selected > 0 then
+					local display = selected[1]
+					for _, buf in ipairs(buffers) do
+						if buf.display == display then
+							vim.cmd("vsplit")
+							api.nvim_set_current_buf(buf.bufnr)
+							break
+						end
+					end
+				end
+			end,
+			["ctrl-s"] = function(selected)
+				if selected and #selected > 0 then
+					local display = selected[1]
+					for _, buf in ipairs(buffers) do
+						if buf.display == display then
+							vim.cmd("split")
+							api.nvim_set_current_buf(buf.bufnr)
+							break
+						end
+					end
+				end
+			end,
+			["ctrl-d"] = function(selected)
+				if selected and #selected > 0 then
+					local display = selected[1]
+					for _, buf in ipairs(buffers) do
+						if buf.display == display then
+							if api.nvim_buf_get_option(buf.bufnr, "modified") then
+								local choice =
+									vim.fn.confirm("Buffer is modified. Save changes?", "&Yes\n&No\n&Cancel", 1)
+								if choice == 1 then
+									api.nvim_buf_call(buf.bufnr, function()
+										vim.cmd("write")
+									end)
+								elseif choice == 3 then
+									return
+								end
+							end
+							pcall(api.nvim_buf_delete, buf.bufnr, { force = false })
+							break
+						end
+					end
+				end
+			end,
+		},
+	})
 end
 
 return M
