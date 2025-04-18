@@ -27,7 +27,12 @@ function M.setup(opts)
 	end
 
 	-- Set up global FZF keybinding (Space+gf)
-	vim.api.nvim_set_keymap("n", "<Space>gf", ":lua require('buffer-manager.ui').fzf_search()<CR>", { noremap = true, silent = true })
+	vim.api.nvim_set_keymap(
+		"n",
+		"<Space>gf",
+		":lua require('buffer-manager.ui').fzf_search()<CR>",
+		{ noremap = true, silent = true }
+	)
 end
 
 M.open = ui.open
@@ -45,6 +50,5 @@ M.remove_from_search = ui.remove_from_search
 M.apply_search = ui.apply_search
 M.filter_buffers = ui.filter_buffers
 M.fzf_search = ui.fzf_search
-
 
 return M
