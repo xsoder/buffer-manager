@@ -6,37 +6,36 @@ local ui = require("buffer-manager.ui")
 function M.setup(opts)
 	config.setup(opts)
 
-	local function open_fzf()
-		if config.options.fzf.enabled then
-			ui.fzf_search()
-		else
-			ui.open()
-		end
-	end
-
-	vim.api.nvim_create_user_command("BufferManager", open_fzf, {})
+	vim.api.nvim_create_user_command("BufferManager", ui.open, {})
+	vim.api.nvim_create_user_command("BufferManagerFzf", ui.fzf_search, {})
 
 	if config.options.default_mappings then
-		-- Create direct keymappings with explicit leader key
 		local open_key = config.options.mappings.open:gsub("<leader>", "<Space>")
 		local vertical_key = config.options.mappings.vertical:gsub("<leader>", "<Space>")
 		local horizontal_key = config.options.mappings.horizontal:gsub("<leader>", "<Space>")
 
-		-- Set up keybindings with both leader formats for compatibility
-		vim.keymap.set("n", config.options.mappings.open, open_fzf, { noremap = true, silent = true })
-		vim.keymap.set("n", open_key, open_fzf, { noremap = true, silent = true })
+		vim.keymap.set("n", config.options.mappings.open, ui.open, { noremap = true, silent = true })
+		vim.keymap.set("n", open_key, ui.open, { noremap = true, silent = true })
 
+		-- Vertical and horizontal splits
 		vim.keymap.set("n", config.options.mappings.vertical, ui.open_vertical, { noremap = true, silent = true })
 		vim.keymap.set("n", vertical_key, ui.open_vertical, { noremap = true, silent = true })
 
 		vim.keymap.set("n", config.options.mappings.horizontal, ui.open_horizontal, { noremap = true, silent = true })
 		vim.keymap.set("n", horizontal_key, ui.open_horizontal, { noremap = true, silent = true })
 
+		-- FZF search (<Space>gf)
+		vim.keymap.set("n", "<Space>gf", ui.fzf_search, { noremap = true, silent = true })
+
 		-- Print confirmation message
-		vim.notify("Buffer Manager: Keybindings set up - " .. open_key .. " to open", vim.log.levels.INFO)
+		vim.notify(
+			"Buffer Manager: Keybindings set up - " .. open_key .. " for regular UI, <Space>gf for FZF",
+			vim.log.levels.INFO
+		)
 	end
 end
 
+-- Export public API functions
 M.open = ui.open
 M.open_vertical = ui.open_vertical
 M.open_horizontal = ui.open_horizontal
